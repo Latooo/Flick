@@ -38,20 +38,29 @@
         <div class="hero-media" aria-hidden="true">
           <div class="hero-poster"></div>
           <!-- The <video> lives in a <template>: nothing is fetched unless the script below inserts it
-               (not with reduced motion, not under 768px). Without JS the poster carries the hero. -->
+               (not with reduced motion). Without JS the poster carries the hero.
+               Small screens get the light 720p pair, large screens the 1440p pair: the browser
+               takes the first <source> whose media query matches and downloads only that one. -->
           <template id="heroVideoTpl">
             <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="media/hero-poster.jpg">
-              <source src="media/hero.webm" type="video/webm">
-              <source src="media/hero.mp4" type="video/mp4">
+              <source src="media/hero-mobile.webm" type="video/webm" media="(max-width: 767px)">
+              <source src="media/hero-mobile.mp4" type="video/mp4" media="(max-width: 767px)">
+              <source src="media/hero.webm" type="video/webm" media="(min-width: 768px)">
+              <source src="media/hero.mp4" type="video/mp4" media="(min-width: 768px)">
             </video>
           </template>
           <script>
             (function () {
-              if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(max-width: 767px)').matches) return;
+              if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
               var t = document.getElementById('heroVideoTpl');
               var v = t.content.firstElementChild.cloneNode(true);
               v.muted = true; v.defaultMuted = true;          /* attribute alone is not enough on cloned nodes: needed for autoplay */
               t.parentNode.insertBefore(v, t.nextSibling);
+              /* WebKit (Safari, iPhone) never starts choosing a <source> for a video inserted with its <source> children
+                 already in place. If nothing started, kick it. Chrome/Firefox start on their own, so no double download. */
+              setTimeout(function () {
+                if (v.networkState === 0) { v.load(); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+              }, 50);
             })();
           </script>
           <div class="hero-scrim"></div>

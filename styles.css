@@ -194,7 +194,6 @@ img, svg { display: block; max-width: 100%; }
     var(--hero-scrim);
 }
 @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
-@media (max-width: 767px) { .hero-video { display: none; } }
 
 .pill {
   display: inline-flex; align-items: center; gap: 10px;
