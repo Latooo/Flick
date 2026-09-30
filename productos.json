@@ -1,0 +1,315 @@
+{
+  "_meta": {
+    "proyecto": "Flick — catálogo web",
+    "version": "1.2",
+    "nota": "Fuente única de contenido del catálogo. La página lo carga en runtime."
+  },
+  "sitio": {
+    "marca": "Flick",
+    "ciudad": "Bucaramanga, Colombia",
+    "whatsapp": "573186924044",
+    "instagram": null,
+    "tiktok": null,
+    "mostrar_precios": false,
+    "mensaje_whatsapp": "Hola, me interesa el {producto}",
+    "badges": [
+      {
+        "titulo": "Entrega a domicilio",
+        "sub": "Bucaramanga y área metropolitana",
+        "icono": "camion"
+      },
+      {
+        "titulo": "Pago contraentrega",
+        "sub": "Pagas cuando lo recibes",
+        "icono": "efectivo"
+      },
+      {
+        "titulo": "Garantía 1 mes",
+        "sub": "Respaldo directo con nosotros",
+        "icono": "escudo"
+      }
+    ],
+    "marquee": [
+      "ATTACK SHARK",
+      "VXE",
+      "AJAZZ",
+      "ONIKUMA",
+      "PAGO CONTRAENTREGA",
+      "ENTREGA EN BUCARAMANGA",
+      "GARANTÍA 1 MES"
+    ],
+    "entrega": {
+      "zona_1": {
+        "nombre": "Bucaramanga y Girón",
+        "gratis_desde": 100000,
+        "costo": 5000
+      },
+      "zona_2": {
+        "nombre": "Floridablanca y Piedecuesta",
+        "gratis_desde": 150000,
+        "costo": 10000
+      },
+      "recogida": "Recogida en bodega, coordinamos por WhatsApp",
+      "garantia_meses": 1
+    },
+    "anuncio": "Stock disponible · Entrega en Bucaramanga y área metropolitana"
+  },
+  "categorias": [
+    {
+      "id": "mouses",
+      "nombre": "Mouses"
+    },
+    {
+      "id": "teclados",
+      "nombre": "Teclados"
+    },
+    {
+      "id": "audio",
+      "nombre": "Headset"
+    },
+    {
+      "id": "superficies",
+      "nombre": "Mouse Pad"
+    }
+  ],
+  "productos": [
+    {
+      "id": "as-x3",
+      "nombre": "Attack Shark X3",
+      "marca": "Attack Shark",
+      "categoria": "mouses",
+      "destacado": true,
+      "colores": [],
+      "gancho": "49 gramos con sensor de gama alta.",
+      "descripcion": "El más liviano del catálogo. Pesa la mitad que un mouse convencional y monta el PixArt PAW3395, el mismo sensor que usan mouses de gama competitiva. Batería para 200 horas.",
+      "specs": {
+        "Peso": "49 g",
+        "Sensor": "PixArt PAW3395",
+        "DPI": "26 000",
+        "Conectividad": "2.4 GHz / Bluetooth / USB-C",
+        "Batería": "200 h",
+        "Switches": "Kailh GM8.0 (80 M clics)",
+        "Encoder": "TTC"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/x3-1.jpg",
+        "img/x3-2.jpg",
+        "img/x3-3.jpg"
+      ],
+      "placeholder": "49 g",
+      "tiene_fotos": false
+    },
+    {
+      "id": "ajazz-aj159-pro",
+      "nombre": "AJAZZ AJ159 PRO 8K",
+      "marca": "AJAZZ",
+      "categoria": "mouses",
+      "destacado": true,
+      "colores": [
+        "Blanco"
+      ],
+      "gancho": "8000 Hz de polling. Base de carga incluida.",
+      "descripcion": "Sensor PAW3395 y 8000 Hz de tasa de sondeo — ocho veces el estándar. Viene con base de carga que además guarda el receptor. Es la opción para quien juega competitivo.",
+      "specs": {
+        "Sensor": "PixArt PAW3395",
+        "Polling rate": "8000 Hz",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Extras": "Base de carga con receptor integrado",
+        "Peso": null
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/aj159-1.jpg",
+        "img/aj159-2.jpg",
+        "img/aj159-3.jpg"
+      ],
+      "placeholder": "8000 Hz",
+      "tiene_fotos": false
+    },
+    {
+      "id": "as-x11",
+      "nombre": "Attack Shark X11",
+      "marca": "Attack Shark",
+      "categoria": "mouses",
+      "destacado": true,
+      "colores": [
+        "Negro",
+        "Blanco"
+      ],
+      "gancho": "Inalámbrico con base de carga RGB.",
+      "descripcion": "63 gramos, tres modos de conexión y base de carga magnética con RGB. Se deja en la base y siempre está cargado. Es el más equilibrado del catálogo entre precio y prestaciones.",
+      "specs": {
+        "Peso": "63 g",
+        "Sensor": "PixArt PAW3311",
+        "DPI": "22 000",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "65 h (300 mAh)",
+        "Switches": "Huano (20 M clics)",
+        "Encoder": "TTC (30 K)",
+        "Skates": "PTFE",
+        "Medidas": "128 × 64 × 40 mm",
+        "Extras": "Base de carga magnética RGB"
+      },
+      "nota_honesta": "Para jugar usa el modo 2.4 GHz con el receptor. El Bluetooth trabaja a 125 Hz y sirve para trabajo y navegación, no para juego competitivo.",
+      "fotos": [
+        "img/x11-1.jpg",
+        "img/x11-2.jpg",
+        "img/x11-3.jpg"
+      ],
+      "placeholder": "63 g",
+      "tiene_fotos": false
+    },
+    {
+      "id": "vxe-r1-se-plus",
+      "nombre": "VXE Dragonfly R1 SE+",
+      "marca": "VXE",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "55 gramos. La puerta de entrada a los ultraligeros.",
+      "descripcion": "Forma cómoda para cualquier tipo de agarre y 55 gramos. Es el mouse con el que la mayoría descubre lo que cambia pasar de uno pesado a uno liviano.",
+      "specs": {
+        "Peso": "55 g",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "520 mAh",
+        "Sensor": null
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/r1-1.jpg",
+        "img/r1-2.jpg",
+        "img/r1-3.jpg"
+      ],
+      "placeholder": "55 g",
+      "tiene_fotos": false
+    },
+    {
+      "id": "as-m86",
+      "nombre": "Attack Shark M86",
+      "marca": "Attack Shark",
+      "categoria": "teclados",
+      "destacado": true,
+      "colores": [],
+      "gancho": "75 % con montaje gasket y hot-swap.",
+      "descripcion": "Formato 75 % de 82 teclas: conserva las funciones y las flechas sin ocupar todo el escritorio. Montaje gasket, switches prelubricados y hot-swap para cambiarlos sin soldar.",
+      "specs": {
+        "Formato": "75 % — 82 teclas",
+        "Montaje": "Gasket",
+        "Hot-swap": "Sí",
+        "Keycaps": "PBT side-print",
+        "Switches": "Prelubricados de fábrica"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/m86-1.jpg",
+        "img/m86-2.jpg",
+        "img/m86-3.jpg"
+      ],
+      "placeholder": "75%",
+      "tiene_fotos": false
+    },
+    {
+      "id": "as-l80",
+      "nombre": "Attack Shark L80",
+      "marca": "Attack Shark",
+      "categoria": "audio",
+      "destacado": true,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "Tres modos y 50 horas de batería.",
+      "descripcion": "2.4 GHz para jugar sin retraso, Bluetooth para el celular y cable de 3.5 mm para consola. Micrófono con cancelación de ruido. Compatible con PC, PS5, PS4, Switch y Mac.",
+      "specs": {
+        "Conectividad": "2.4 GHz / Bluetooth 5.2 / 3.5 mm",
+        "Batería": "50 h",
+        "Micrófono": "Con cancelación de ruido",
+        "Compatibilidad": "PC · PS5 · PS4 · Switch · Mac"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/l80-1.jpg",
+        "img/l80-2.jpg",
+        "img/l80-3.jpg"
+      ],
+      "placeholder": "50 h",
+      "tiene_fotos": false
+    },
+    {
+      "id": "onikuma-gt808",
+      "nombre": "Onikuma GT808",
+      "marca": "Onikuma",
+      "categoria": "audio",
+      "destacado": false,
+      "colores": [],
+      "gancho": "60 horas y micrófono desmontable.",
+      "descripcion": "Tres modos de conexión, 60 horas de batería y micrófono desmontable con cancelación de ruido. Se quita el micrófono y sirve como audífono normal para salir.",
+      "specs": {
+        "Conectividad": "Tres modos",
+        "Batería": "60 h",
+        "Micrófono": "Desmontable, con cancelación",
+        "Iluminación": "RGB"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/gt808-1.jpg",
+        "img/gt808-2.jpg",
+        "img/gt808-3.jpg"
+      ],
+      "placeholder": "60 h",
+      "tiene_fotos": false
+    },
+    {
+      "id": "pad-hoswn-60",
+      "nombre": "Mousepad HOSWN 60 × 30",
+      "marca": "HOSWN",
+      "categoria": "superficies",
+      "destacado": true,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "Microfibra de verdad, no poliéster.",
+      "descripcion": "Superficie de microfibra con base de caucho natural y bordes cosidos. Probamos tres mousepads del pedido y este fue el único que nos convenció al tacto.",
+      "specs": {
+        "Tamaño": "60 × 30 cm",
+        "Superficie": "Microfibra",
+        "Base": "Caucho natural antideslizante",
+        "Bordes": "Cosidos"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/hoswn-1.jpg",
+        "img/hoswn-2.jpg"
+      ],
+      "placeholder": "60×30",
+      "tiene_fotos": false
+    },
+    {
+      "id": "pad-basico",
+      "nombre": "Mousepad básico XL",
+      "marca": "Genérico",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Anime 80 × 30",
+        "Japonés 90 × 40"
+      ],
+      "gancho": "Grande y económico.",
+      "descripcion": "Superficie de poliéster con bordes cosidos. Cubre todo el escritorio y cumple para uso diario. No es microfibra: si buscas mejor deslizamiento, mira el HOSWN.",
+      "specs": {
+        "Tamaños": "80 × 30 cm y 90 × 40 cm",
+        "Superficie": "Poliéster",
+        "Bordes": "Cosidos"
+      },
+      "nota_honesta": "Es un pad de gama básica. El tacto no se compara con uno de microfibra.",
+      "fotos": [
+        "img/basico-1.jpg",
+        "img/basico-2.jpg"
+      ],
+      "placeholder": "XL",
+      "tiene_fotos": false
+    }
+  ]
+}

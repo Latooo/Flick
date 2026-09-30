@@ -1,0 +1,7 @@
+STATE.md
+SUPERPROMPT_Flick.md
+*.bak
+backup/
+node_modules/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flick — Periféricos gaming en Bucaramanga</title>
+  <meta name="description" content="Periféricos gaming importados en Bucaramanga: mouses inalámbricos ultraligeros, teclados mecánicos y audio. Pago contraentrega.">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%230A0A0A%27/%3E%3Cpath d=%27M9 8h14v4H14v4h7v4h-7v4H9z%27 fill=%27%232CB4B2%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#catalogo">Saltar al catálogo</a>
+
+  <div id="page">
+    <!-- Announcement bar: text from sitio.anuncio (hidden while empty) -->
+    <div class="announce" id="announce" role="note"></div>
+
+    <header class="site-header" id="top">
+      <div class="container header-inner">
+        <a class="logo" href="#top" aria-label="Flick, inicio">FLICK</a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mainNav" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+          </svg>
+        </button>
+        <nav class="main-nav" id="mainNav" aria-label="Categorías"></nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero: static brand copy, no JS dependency -->
+      <section class="hero" aria-labelledby="heroTitle">
+        <!-- Decorative full-bleed background: poster always underneath, video on top when allowed -->
+        <div class="hero-media" aria-hidden="true">
+          <div class="hero-poster"></div>
+          <!-- The <video> lives in a <template>: nothing is fetched unless the script below inserts it
+               (not with reduced motion, not under 768px). Without JS the poster carries the hero. -->
+          <template id="heroVideoTpl">
+            <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="media/hero-poster.jpg">
+              <source src="media/hero.webm" type="video/webm">
+              <source src="media/hero.mp4" type="video/mp4">
+            </video>
+          </template>
+          <script>
+            (function () {
+              if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(max-width: 767px)').matches) return;
+              var t = document.getElementById('heroVideoTpl');
+              var v = t.content.firstElementChild.cloneNode(true);
+              v.muted = true; v.defaultMuted = true;          /* attribute alone is not enough on cloned nodes: needed for autoplay */
+              t.parentNode.insertBefore(v, t.nextSibling);
+            })();
+          </script>
+          <div class="hero-scrim"></div>
+        </div>
+        <div class="container hero-content">
+          <p class="pill"><span class="pill-dot" aria-hidden="true"></span>BUCARAMANGA, COLOMBIA</p>
+          <h1 id="heroTitle" class="hero-title">UN <span class="hero-flick">FLICK</span><br>POR DELANTE.</h1>
+          <p class="hero-sub">Periféricos gaming importados. Mouses inalámbricos ultraligeros, teclados mecánicos y audio. Entrega en Bucaramanga, pago contraentrega.</p>
+          <div class="hero-actions">
+            <a class="btn btn-hot" href="#catalogo">Ver catálogo</a>
+            <ul class="socials" id="socials" aria-label="Redes sociales"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Badge row: from sitio.badges -->
+      <section class="badges" aria-label="Condiciones de compra">
+        <div class="container">
+          <ul class="badge-list" id="badges"></ul>
+        </div>
+      </section>
+
+      <!-- Marquee band: from sitio.marquee -->
+      <div class="marquee" id="marquee" aria-label="Marcas y condiciones">
+        <div class="marquee-track" id="marqueeTrack"></div>
+      </div>
+
+      <section id="catalogo" class="catalog" aria-labelledby="catalogTitle">
+        <div class="container">
+          <p class="eyebrow">Catálogo</p>
+          <h2 id="catalogTitle" class="section-title">Lo que tenemos</h2>
+          <div class="filters" id="filters" role="group" aria-label="Filtrar por categoría"></div>
+          <div class="grid" id="grid"></div>
+          <noscript><p class="notice">Este catálogo necesita JavaScript para mostrar los productos. Escríbenos por WhatsApp al +57 318 692 4044 y te los mostramos.</p></noscript>
+          <p class="notice" id="loadError" role="alert" hidden></p>
+        </div>
+      </section>
+
+      <!-- Delivery / warranty band: from sitio.entrega -->
+      <section class="delivery" id="entrega" aria-labelledby="deliveryTitle">
+        <div class="container">
+          <p class="eyebrow">Entrega y garantía</p>
+          <h2 id="deliveryTitle" class="section-title">Compras con respaldo</h2>
+          <p class="delivery-lead"><strong>Pago contraentrega:</strong> pagas cuando recibes el producto, sin adelantar dinero.</p>
+          <ul class="delivery-grid" id="deliveryGrid"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <p class="foot-brand" id="footBrand">FLICK</p>
+          <p class="foot-line" id="footCity"></p>
+        </div>
+        <div>
+          <p class="foot-head">Catálogo</p>
+          <ul class="foot-list" id="footCats"></ul>
+        </div>
+        <div>
+          <p class="foot-head">Escríbenos</p>
+          <p class="foot-line"><a class="foot-wa" id="footWa" href="#" target="_blank" rel="noopener"></a></p>
+          <ul class="socials" id="footSocials" aria-label="Redes sociales"></ul>
+        </div>
+      </div>
+    </footer>
+
+    <a class="wa-float" id="floatWa" href="#" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.4-.4.4c-.1.2-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.8 1.2 2.1 1.3.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>
+    </a>
+  </div>
+
+  <!-- Product modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" id="modalPanel" tabindex="-1">
+      <button class="modal-close" type="button" data-close aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
