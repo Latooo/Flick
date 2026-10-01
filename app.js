@@ -1,5 +1,23 @@
 'use strict';
 
+const INTRO = {
+  curtainMs:         350,
+  brightenMs:        1000,
+  logoInMs:          600,
+  flickMs:           180,
+  revealMs:          300,
+  scrimRest:         'rgba(10,10,10,.62)',  // must match --hero-scrim in styles.css
+  scrimBright:       'rgba(10,10,10,.25)',
+  logoScale:         3,
+  flickEasing:       'linear',              // candidates to compare in Fase 3: linear, cubic-bezier(.55,0,.85,.25), cubic-bezier(.34,1.56,.64,1)
+  videoTimeoutMs:    1200,                  // budget for video + fonts + data, raced together
+  hardCapMs:         4500,
+  lateHandoffMs:     1500,   // keep in sync with the <head> rescue timeout in index.html
+  scrollTolerancePx: 8,
+  landingOffsetY:    0,                     // fine-tune escape hatch, calibrated in Fase 3
+  sessionKey:        'flickIntroPlayed',    // must match the literal in index.html's <head> script
+};
+
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -353,6 +371,292 @@ function setupCrosshair() {
   document.documentElement.addEventListener('mouseenter', () => { if (seen) xh.classList.add('is-visible'); });
 }
 
+/* ---------- intro splash ---------- */
+// Runs only if index.html's <head> script already decided to (html.intro-lock present).
+// Every exit path funnels through finalize(), which is safe to call at any point —
+// before the overlay exists, mid-sequence, or after a full run — so a crash anywhere
+// in here still leaves the page fully visible and interactive.
+
+function parseRgba(str) {
+  const m = /rgba?\(([^)]+)\)/.exec(str);
+  const parts = m[1].split(',').map((s) => parseFloat(s));
+  return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+}
+
+function tweenScrim(fromStr, toStr, duration, isCancelled) {
+  const from = parseRgba(fromStr);
+  const to = parseRgba(toStr);
+  const root = document.documentElement;
+  const start = performance.now();
+  return new Promise((resolve) => {
+    function tick(now) {
+      if (isCancelled()) { resolve(); return; }
+      const t = Math.min(1, (now - start) / duration);
+      const a = from.a + (to.a - from.a) * t;
+      root.style.setProperty('--hero-scrim', `rgba(${from.r},${from.g},${from.b},${a})`);
+      if (t < 1) requestAnimationFrame(tick);
+      else resolve();
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// Generic browser/OS scrollbar thickness, not "does this page currently overflow" —
+// measuring the latter at intro-start is unreliable: the catalog grid is still empty
+// (data hasn't loaded), so the page may not overflow yet even though it will once it does.
+function getScrollbarWidth() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:50px;height:50px;overflow:scroll;';
+  document.body.appendChild(probe);
+  const width = probe.offsetWidth - probe.clientWidth;
+  probe.remove();
+  return width;
+}
+
+function rangeRectForChar(textNode, index) {
+  const range = document.createRange();
+  range.setStart(textNode, index);
+  range.setEnd(textNode, index + 1);
+  return range.getBoundingClientRect();
+}
+
+function waitReady(video, dataPromise, timeoutMs) {
+  const videoReady = !video
+    ? Promise.resolve()
+    : (video.readyState >= 3 ? Promise.resolve() : new Promise((res) => video.addEventListener('canplay', res, { once: true })));
+  const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  const allReady = Promise.all([videoReady, fontsReady, dataPromise]).then(() => true);
+  const timeout = new Promise((res) => setTimeout(() => res(false), timeoutMs));
+  return Promise.race([allReady, timeout]);
+}
+
+function buildFlkClone(flickEl) {
+  const cs = getComputedStyle(flickEl);
+  const fontSizePx = parseFloat(cs.fontSize);
+  const letterSpacingPx = parseFloat(cs.letterSpacing) || 0;
+  const lineHeightPx = parseFloat(cs.lineHeight);
+  const ratio = isNaN(lineHeightPx) ? 1 : lineHeightPx / fontSizePx;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'introFlk';
+  wrap.style.visibility = 'hidden';
+  wrap.style.opacity = '0';
+  wrap.style.fontFamily = cs.fontFamily;
+  wrap.style.fontWeight = cs.fontWeight;
+  wrap.style.color = cs.color;
+  wrap.style.fontSize = (fontSizePx * INTRO.logoScale) + 'px';
+  wrap.style.letterSpacing = (letterSpacingPx * INTRO.logoScale) + 'px';
+  wrap.style.lineHeight = String(ratio);
+
+  ['F', 'L', 'K'].forEach((ch) => {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    wrap.appendChild(span);
+  });
+  return wrap;
+}
+
+// Per-letter FLIP: F/L/K move independently (K travels further, past the gap I and C
+// will occupy) so the word "flicks" into place rather than sliding as a rigid block.
+// Origin is an explicit pixel offset, not a CSS keyword: the span's own box is sized by
+// line-height (.88 × font-size), which does not coincide with the Range-measured glyph
+// point, so the keyword "left bottom" would anchor the wrong pixel.
+async function flipLanding(flkWrap, flickEl, trackAnim) {
+  const textNode = flickEl.firstChild;
+  const letters = ['F', 'L', 'K'];
+  const letterIndex = { F: 0, L: 1, K: 4 };
+  const scale = 1 / INTRO.logoScale;
+  const spans = [...flkWrap.children];
+
+  const anims = spans.map((span, i) => {
+    const idx = letterIndex[letters[i]];
+    const spanRect = span.getBoundingClientRect();
+    const cloneCharRect = rangeRectForChar(span.firstChild, 0);
+    const targetRect = rangeRectForChar(textNode, idx);
+
+    const originX = cloneCharRect.left - spanRect.left;
+    const originY = cloneCharRect.bottom - spanRect.top;
+    span.style.transformOrigin = `${originX}px ${originY}px`;
+
+    const dx = targetRect.left - cloneCharRect.left;
+    const dy = (targetRect.bottom - cloneCharRect.bottom) + INTRO.landingOffsetY;
+
+    return trackAnim(span.animate(
+      [{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(${dx}px, ${dy}px) scale(${scale})` }],
+      { duration: INTRO.flickMs, easing: INTRO.flickEasing, fill: 'forwards' }
+    )).finished;
+  });
+
+  await Promise.all(anims);
+  flickEl.classList.remove('intro-veil');   // I and C appear here, instantly — no fade
+  flkWrap.style.visibility = 'hidden';
+}
+
+function revealHeroContent(els, trackAnim) {
+  const anims = els.filter(Boolean).map((el) => {
+    el.classList.remove('intro-veil');
+    return trackAnim(el.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: INTRO.revealMs, easing: 'ease', fill: 'both' }
+    )).finished;
+  });
+  return Promise.all(anims);
+}
+
+async function playSequence(ctx) {
+  const { curtain, flk, flick, announceEl, headerEl, pill, pre, post, sub, actions,
+    badges, marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled } = ctx;
+
+  const startH = curtain.getBoundingClientRect().height;
+  const targetH = announceEl.getBoundingClientRect().height + headerEl.getBoundingClientRect().height;
+  const scaleTarget = targetH / startH;
+
+  await trackAnim(curtain.animate(
+    [{ transform: 'scaleY(1)' }, { transform: `scaleY(${scaleTarget})` }],
+    { duration: INTRO.curtainMs, easing: 'ease-out', fill: 'forwards' }
+  )).finished;
+  if (isCancelled()) return;
+
+  await tweenScrim(INTRO.scrimRest, INTRO.scrimBright, INTRO.brightenMs, isCancelled);
+  if (isCancelled()) return;
+
+  flk.style.visibility = 'visible';
+  await trackAnim(flk.animate(
+    [{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'scale(1)' }],
+    { duration: INTRO.logoInMs, easing: 'ease-out', fill: 'forwards' }
+  )).finished;
+  if (isCancelled()) return;
+
+  await flipLanding(flk, flick, trackAnim);
+  if (isCancelled()) return;
+
+  // curtain stays over announce+header until this beat: the announce bar's real
+  // background (--surface, lighter than the curtain's --bg) only gets exposed here,
+  // masked by the bigger reveal happening at the same time
+  await Promise.all([
+    tweenScrim(INTRO.scrimBright, INTRO.scrimRest, INTRO.revealMs, isCancelled),
+    revealHeroContent([pill, pre, post, sub, actions, badges, marquee, catalog, delivery, footer, waFloat], trackAnim),
+    trackAnim(curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: INTRO.revealMs, easing: 'ease', fill: 'forwards' })).finished,
+  ]);
+}
+
+async function runIntro(dataPromise) {
+  const html = document.documentElement;
+  let crosshairStarted = false;
+  const ensureCrosshair = () => { if (!crosshairStarted) { crosshairStarted = true; setupCrosshair(); } };
+  // finalize() is the only place that starts the crosshair (guarded by the flag above):
+  // if the hard cap fires while something upstream is stuck awaiting (rAF in a
+  // backgrounded tab never ticks, for instance), runIntro itself may stay suspended
+  // forever, but finalize() still ran synchronously, so the crosshair isn't lost with it.
+  if (!html.classList.contains('intro-lock')) { ensureCrosshair(); return; }
+
+  const handoff = performance.now();
+  let cancelled = false;
+  let hardCapTimer = null;
+  let detachWatchers = () => {};
+  const activeAnimations = [];
+  const trackAnim = (anim) => { activeAnimations.push(anim); return anim; };
+  const isCancelled = () => cancelled;
+
+  function markSeen() {
+    try { sessionStorage.setItem(INTRO.sessionKey, '1'); } catch (e) { /* private mode, nothing to persist */ }
+  }
+
+  function finalize() {
+    if (hardCapTimer) clearTimeout(hardCapTimer);
+    detachWatchers();
+    activeAnimations.forEach((a) => { try { a.cancel(); } catch (e) {} });
+    const overlay = document.getElementById('introOverlay');
+    if (overlay) overlay.remove();
+    document.querySelectorAll('.intro-veil').forEach((el) => el.classList.remove('intro-veil'));
+    html.style.removeProperty('--hero-scrim');
+    html.classList.remove('intro-lock');
+    html.style.removeProperty('overflow');
+    html.style.removeProperty('padding-right');
+    document.body.style.removeProperty('overflow');
+    const page = document.getElementById('page');
+    if (page) page.inert = false;
+    const skipLink = document.querySelector('.skip-link');
+    if (skipLink) skipLink.inert = false;
+    ensureCrosshair();
+  }
+
+  try {
+    if (handoff > INTRO.lateHandoffMs) { markSeen(); finalize(); return; }
+    if (window.scrollY > INTRO.scrollTolerancePx || location.hash) { markSeen(); finalize(); return; }
+
+    const pill = $('.pill');
+    const pre = $('.hero-pre');
+    const flick = $('.hero-flick');
+    const post = $('.hero-post');
+    const sub = $('.hero-sub');
+    const actions = $('.hero-actions');
+    const badges = $('.badges');
+    const marquee = document.getElementById('marquee');
+    const catalog = document.getElementById('catalogo');
+    const delivery = document.getElementById('entrega');
+    const footer = $('.site-footer');
+    const waFloat = document.getElementById('floatWa');
+    const announceEl = document.getElementById('announce');
+    const headerEl = document.getElementById('top');
+    const video = document.querySelector('.hero-video');
+
+    [pill, pre, flick, post, sub, actions, badges, marquee, catalog, delivery, footer, waFloat].forEach((el) => el && el.classList.add('intro-veil'));
+
+    const page = document.getElementById('page');
+    if (page) page.inert = true;
+    // .skip-link lives outside #page (deliberately, so it's the very first tab stop) —
+    // #page.inert doesn't reach it, so it needs the same treatment on its own
+    const skipLink = document.querySelector('.skip-link');
+    if (skipLink) skipLink.inert = true;
+    // compensate for the scrollbar overflow:hidden removes, so releasing it later
+    // doesn't shrink the content width by the scrollbar's own size (measured, not
+    // assumed: 0 on touch/overlay-scrollbar systems, ~15-17px on classic desktop ones)
+    const scrollbarW = getScrollbarWidth();
+    html.style.overflow = 'hidden';
+    if (scrollbarW > 0) html.style.paddingRight = scrollbarW + 'px';
+    document.body.style.overflow = 'hidden';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'introOverlay';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    const curtain = document.createElement('div');
+    curtain.id = 'introCurtain';
+    overlay.appendChild(curtain);
+
+    const flk = buildFlkClone(flick);
+    overlay.appendChild(flk);
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => html.classList.remove('intro-lock'));
+
+    hardCapTimer = setTimeout(() => { cancelled = true; finalize(); }, INTRO.hardCapMs);
+
+    const startWidth = window.innerWidth;
+    const onResize = () => { if (window.innerWidth !== startWidth) cancelled = true; };
+    const onScroll = () => { if (Math.abs(window.scrollY) > INTRO.scrollTolerancePx) cancelled = true; };
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    detachWatchers = () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll);
+    };
+
+    const ready = await waitReady(video, dataPromise, INTRO.videoTimeoutMs);
+    if (cancelled || !ready) { finalize(); return; }
+
+    await playSequence({ curtain, flk, flick, announceEl, headerEl, pill, pre, post, sub, actions,
+      badges, marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled });
+    finalize();
+  } catch (err) {
+    // cancel() on a tracked animation rejects its .finished with AbortError — expected
+    // whenever the hard cap or a resize/scroll cancellation cuts the sequence short.
+    if (!(err && err.name === 'AbortError')) console.error(err);
+    finalize();
+  }
+}
+
 /* ---------- boot ---------- */
 function showError() {
   const el = $('#loadError');
@@ -365,21 +669,25 @@ function showError() {
 async function init() {
   setupNavToggle();
   setupModal();
-  setupCrosshair();
-  try {
-    DATA = await loadData();
-    renderAnnounce(DATA.sitio);
-    renderNav(DATA.categorias);
-    renderSocials(DATA.sitio);
-    renderBadges(DATA.sitio.badges);
-    renderMarquee(DATA.sitio.marquee);
-    renderDelivery(DATA.sitio.entrega);
-    renderFooter(DATA.sitio);
-    setupCatalog();
-  } catch (err) {
-    console.error(err);
-    showError();
-  }
+
+  const dataPromise = (async () => {
+    try {
+      DATA = await loadData();
+      renderAnnounce(DATA.sitio);
+      renderNav(DATA.categorias);
+      renderSocials(DATA.sitio);
+      renderBadges(DATA.sitio.badges);
+      renderMarquee(DATA.sitio.marquee);
+      renderDelivery(DATA.sitio.entrega);
+      renderFooter(DATA.sitio);
+      setupCatalog();
+    } catch (err) {
+      console.error(err);
+      showError();
+    }
+  })();
+
+  await runIntro(dataPromise);   // starts the crosshair itself, from finalize() — see there
 }
 
 init();

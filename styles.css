@@ -511,6 +511,44 @@ body.modal-open { overflow: hidden; }
 .xh.is-down .xh-in { --gap: 2px; --s: .8; transition-duration: .05s; }
 .xh.is-down .xh-in i { transition-duration: .05s; }
 
+/* ---------- intro splash (elements + classes only exist while app.js runs it) ---------- */
+#introOverlay {
+  position: fixed; inset: 0; z-index: 10000;
+  pointer-events: none;
+}
+#introCurtain {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 100vh;   /* fallback: discarded by browsers that support the next line */
+  height: 100dvh;
+  background: var(--bg);
+  transform-origin: top;
+  will-change: transform;
+}
+#introFlk {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#introFlk span { display: inline-block; will-change: transform; }
+
+/* hidden only once app.js commits to playing the intro; never a static default.
+   Covers everything outside the hero too — it's sized to its content (not 100vh),
+   so without this the badges/marquee/catalog/footer/wa-float show through beneath
+   the curtain during steps 2-4, when only the video is supposed to be visible. */
+.intro-veil.pill,
+.intro-veil.hero-pre,
+.intro-veil.hero-post,
+.intro-veil.hero-sub,
+.intro-veil.hero-actions,
+.intro-veil.badges,
+.intro-veil.marquee,
+.intro-veil.catalog,
+.intro-veil.delivery,
+.intro-veil.site-footer,
+.intro-veil.wa-float { opacity: 0; }
+.intro-veil.hero-flick { visibility: hidden; }
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
