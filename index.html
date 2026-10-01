@@ -6,6 +6,38 @@
   <title>Flick — Periféricos gaming en Bucaramanga</title>
   <meta name="description" content="Periféricos gaming importados en Bucaramanga: mouses inalámbricos ultraligeros, teclados mecánicos y audio. Pago contraentrega.">
   <meta name="theme-color" content="#0A0A0A">
+  <script>
+    // Decides eligibility before first paint so the cover below can show with zero flash.
+    // app.js re-checks scrollY/hash at handoff (scroll restoration can land after this runs)
+    // and owns the actual intro; this only gates the black cover and the session flag.
+    (function () {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (location.hash) return;
+      if (window.scrollY > 8) return;   // keep in sync with INTRO.scrollTolerancePx in app.js
+      try {
+        if (sessionStorage.getItem('flickIntroPlayed')) return;   // keep in sync with INTRO.sessionKey in app.js
+        sessionStorage.setItem('flickIntroPlayed', '1');
+      } catch (e) { /* private mode: can't remember, play anyway */ }
+      document.documentElement.classList.add('intro-lock');
+      // rescue: if app.js never takes over (load failure, crash before handoff), don't stay black forever.
+      // Same value as INTRO.lateHandoffMs in app.js — past that point app.js bails anyway, so there's
+      // no reason to hold the cover any longer.
+      setTimeout(function () {
+        document.documentElement.classList.remove('intro-lock');
+      }, 1500);
+    })();
+  </script>
+  <style>
+    /* covers first paint only; app.js builds the real overlay and hands off from here.
+       #0A0A0A kept in sync with --bg in styles.css (that stylesheet isn't loaded yet) */
+    html.intro-lock::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: #0A0A0A;
+      z-index: 2147483647;
+    }
+  </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
@@ -67,7 +99,7 @@
         </div>
         <div class="container hero-content">
           <p class="pill"><span class="pill-dot" aria-hidden="true"></span>BUCARAMANGA, COLOMBIA</p>
-          <h1 id="heroTitle" class="hero-title">UN <span class="hero-flick">FLICK</span><br>POR DELANTE.</h1>
+          <h1 id="heroTitle" class="hero-title"><span class="hero-pre">UN </span><span class="hero-flick">FLICK</span><br><span class="hero-post">POR DELANTE.</span></h1>
           <p class="hero-sub">Periféricos gaming importados. Mouses inalámbricos ultraligeros, teclados mecánicos y audio. Entrega en Bucaramanga, pago contraentrega.</p>
           <div class="hero-actions">
             <a class="btn btn-hot" href="#catalogo">Ver catálogo</a>
