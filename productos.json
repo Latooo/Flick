@@ -12,6 +12,7 @@
     "tiktok": null,
     "mostrar_precios": false,
     "mensaje_whatsapp": "Hola, me interesa el {producto}",
+    "mensaje_whatsapp_agotado": "Hola, ¿van a volver a traer el {producto}?",
     "marquee": [
       "ATTACK SHARK",
       "VXE",
@@ -200,6 +201,7 @@
       "marca": "Attack Shark",
       "categoria": "audio",
       "destacado": true,
+      "agotado": true,
       "colores": [
         "Negro"
       ],
@@ -226,6 +228,7 @@
       "marca": "Onikuma",
       "categoria": "audio",
       "destacado": false,
+      "agotado": true,
       "colores": [],
       "gancho": "60 horas y micrófono desmontable.",
       "descripcion": "Tres modos de conexión, 60 horas de batería y micrófono desmontable con cancelación de ruido. Se quita el micrófono y sirve como audífono normal para salir.",

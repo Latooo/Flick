@@ -63,7 +63,10 @@ const byId = (id) => DATA.productos.find((p) => p.id === id);
 const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== '';
 
 function whatsappUrl(producto) {
-  const msg = DATA.sitio.mensaje_whatsapp.replace('{producto}', producto.nombre);
+  const template = (producto.agotado && hasValue(DATA.sitio.mensaje_whatsapp_agotado))
+    ? DATA.sitio.mensaje_whatsapp_agotado
+    : DATA.sitio.mensaje_whatsapp;
+  const msg = template.replace('{producto}', producto.nombre);
   return `https://wa.me/${DATA.sitio.whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -268,7 +271,10 @@ function mediaHTML(p, src, { small = false, eager = false } = {}) {
   const img = p.tiene_fotos === true && hasValue(src)
     ? `<img src="${esc(src)}" alt="${esc(p.nombre)}"${eager ? '' : ' loading="lazy"'}>`
     : '';
-  return `<div class="ph${small ? ' ph-sm' : ''}" aria-hidden="true">${num}<span class="ph-name">${esc(p.nombre)}</span></div>${img}`;
+  // not aria-hidden, unlike .ph: this is the only text equivalent for "sold out" —
+  // it has to reach the card's accessible name, not just show as a colored ribbon
+  const ribbon = p.agotado ? '<span class="agotado-ribbon">Agotado</span>' : '';
+  return `<div class="ph${small ? ' ph-sm' : ''}" aria-hidden="true">${num}<span class="ph-name">${esc(p.nombre)}</span></div>${img}${ribbon}`;
 }
 
 // Error events don't bubble, so listen in capture phase on a container.
@@ -290,12 +296,15 @@ function renderFilters() {
 }
 
 function renderGrid() {
-  const list = DATA.productos.filter((p) => activeCat === 'todos' || p.categoria === activeCat);
+  // stable sort: agotados move to the end, everyone else keeps their relative order
+  const list = DATA.productos
+    .filter((p) => activeCat === 'todos' || p.categoria === activeCat)
+    .sort((a, b) => (a.agotado ? 1 : 0) - (b.agotado ? 1 : 0));
   const grid = $('#grid');
   grid.innerHTML = list
     .map((p) => `
       <article class="card" tabindex="0" role="button" data-id="${esc(p.id)}" aria-haspopup="dialog">
-        <div class="media">${mediaHTML(p, (p.fotos || [])[0])}</div>
+        <div class="media${p.agotado ? ' is-agotado' : ''}">${mediaHTML(p, (p.fotos || [])[0])}</div>
         <div class="card-body">
           <p class="brand">${esc(p.marca)}</p>
           <h3 class="card-name">${esc(p.nombre)}</h3>
@@ -352,18 +361,18 @@ function modalHTML(p) {
 
   return `
     <div class="gallery">
-      <div class="media" id="mainMedia">${mediaHTML(p, fotos[0], { eager: true })}</div>
+      <div class="media${p.agotado ? ' is-agotado' : ''}" id="mainMedia">${mediaHTML(p, fotos[0], { eager: true })}</div>
       ${thumbs}
     </div>
     <div class="info">
       <p class="brand">${esc(p.marca)}</p>
-      <h2 class="modal-name" id="modalTitle">${esc(p.nombre)}</h2>
+      <h2 class="modal-name" id="modalTitle">${esc(p.nombre)}${p.agotado ? ' <span class="agotado-tag">Agotado</span>' : ''}</h2>
       ${hasValue(p.gancho) ? `<p class="lead">${esc(p.gancho)}</p>` : ''}
       ${hasValue(p.descripcion) ? `<p class="desc">${esc(p.descripcion)}</p>` : ''}
       ${specs.length ? `<table class="specs"><caption class="sr-only" style="position:absolute;left:-9999px">Especificaciones</caption><tbody>${specs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>` : ''}
       ${hasValue(p.nota_honesta) ? `<div class="honest" role="note">${ICONS.warn}<div><p class="honest-title">Tenlo en cuenta</p><p>${esc(p.nota_honesta)}</p></div></div>` : ''}
       ${colores.length ? `<div class="chips"><span class="chips-label">Colores</span>${colores.map((c) => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : ''}
-      <a class="btn btn-wa" href="${esc(whatsappUrl(p))}" target="_blank" rel="noopener">${ICONS.wa}Pedir por WhatsApp</a>
+      <a class="btn btn-wa" href="${esc(whatsappUrl(p))}" target="_blank" rel="noopener">${ICONS.wa}${p.agotado ? 'Preguntar si vuelve' : 'Pedir por WhatsApp'}</a>
     </div>`;
 }
 
@@ -432,7 +441,7 @@ function setupCrosshair() {
   const xh = document.createElement('div');
   xh.className = 'xh';
   xh.setAttribute('aria-hidden', 'true');
-  xh.innerHTML = '<div class="xh-in"><i class="xh-t"></i><i class="xh-b"></i><i class="xh-l"></i><i class="xh-r"></i></div>';
+  xh.innerHTML = '<div class="xh-in"><i class="xh-t"></i><i class="xh-b"></i><i class="xh-l"></i><i class="xh-r"></i><i class="xh-dot"></i></div>';
   document.body.appendChild(xh);
 
   const style = document.createElement('style');
