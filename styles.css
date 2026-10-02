@@ -387,6 +387,29 @@ img, svg { display: block; max-width: 100%; }
 .media { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--surface-2); }
 .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
 .card:hover .media img, .card:focus-visible .media img { transform: scale(1.04); }
+
+/* sold out: photo or placeholder desaturated + darkened, diagonal ribbon on top.
+   overflow:hidden on .media (above) clips the ribbon — it can never spill past the
+   card or reach .card-body below, regardless of rotation/width tuning here. */
+.media.is-agotado .ph,
+.media.is-agotado img { filter: grayscale(1) brightness(.55); }
+.agotado-ribbon {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  width: 150%;
+  z-index: 1;   /* stays above a <img> created later (thumbnail swap after a load error) */
+  text-align: center;
+  white-space: nowrap;
+  padding-block: 6px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 6px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(10,10,10,.8);
+  border-block: 1px solid var(--line-strong);
+}
 .ph {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -450,6 +473,21 @@ img, svg { display: block; max-width: 100%; }
 .info { min-width: 0; padding-right: 0; }
 @media (min-width: 768px) { .info { padding-top: 8px; } }
 .modal-name { font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: 1px; line-height: 1; margin-top: 4px; padding-right: 48px; }
+.agotado-tag {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 12px;
+  font-family: var(--font-body);
+  font-size: .85rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(10,10,10,.7);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+}
 .lead { font-weight: 600; font-size: 1.1rem; line-height: 1.5; margin-top: 14px; }
 .desc { color: var(--muted); margin-top: 10px; max-width: 65ch; }
 
@@ -598,9 +636,22 @@ body.modal-open { overflow: hidden; }
 .xh-b { top: 0;    transform: translateY(var(--gap)); }
 .xh-l { left: -9px; transform: translateX(calc(var(--gap) * -1)); }
 .xh-r { left: 0;    transform: translateX(var(--gap)); }
-.xh.is-aim .xh-in { --gap: 10px; --s: 1.45; }
+/* is-aim no longer resizes the crosshair (--gap/--s unchanged) — it shows this dot
+   instead. Inherits position/color/box-shadow from the shared ".xh i" rule above,
+   is-teal included; only size/shape and the opacity+transform reveal are its own.
+   Selector is ".xh .xh-dot", not just ".xh-dot": "i" + one class on ".xh i" (0,1,1)
+   otherwise outranks a single-class ".xh-dot" (0,1,0) and silently wins border-radius
+   and transition, leaving a 1px square that snaps instead of a circle that fades. */
+.xh .xh-dot {
+  width: 4px; height: 4px; left: -2px; top: -2px;
+  border-radius: 50%;
+  opacity: 0; transform: scale(0);
+  transition: opacity .12s cubic-bezier(.25,.8,.25,1), transform .12s cubic-bezier(.25,.8,.25,1), background-color .18s cubic-bezier(.25,.8,.25,1);
+}
+.xh.is-aim .xh-dot { opacity: 1; transform: scale(1); }
 .xh.is-down .xh-in { --gap: 2px; --s: .8; transition-duration: .05s; }
 .xh.is-down .xh-in i { transition-duration: .05s; }
+.xh.is-down .xh-dot { opacity: 0; transform: scale(0); }   /* hidden for the duration of the click, even while still aiming */
 
 /* ---------- intro splash (elements + classes only exist while app.js runs it) ---------- */
 #introOverlay {
