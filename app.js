@@ -72,6 +72,24 @@ function renderAnnounce(sitio) {
   if (hasValue(sitio.anuncio)) $('#announce').textContent = sitio.anuncio;
 }
 
+// Real announce-bar height for .hero's min-height calc — 0 when it's empty
+// (.announce:empty{display:none} already makes getBoundingClientRect 0, no extra
+// branching needed here) or when its text wraps to a second line at this width.
+// Re-measured on width changes only: a taller/shorter viewport with the same width
+// can't change how the text wraps.
+function setupAnnounceHeight() {
+  const announce = document.getElementById('announce');
+  if (!announce) return;
+  function measure() {
+    document.documentElement.style.setProperty('--announce-h', announce.getBoundingClientRect().height + 'px');
+  }
+  measure();
+  let lastWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; measure(); }
+  }, { passive: true });
+}
+
 function renderNav(categorias) {
   $('#mainNav').innerHTML = categorias
     .map((c) => `<a href="#catalogo" data-cat="${esc(c.id)}">${esc(c.nombre)}</a>`)
@@ -850,6 +868,7 @@ async function init() {
     try {
       DATA = await loadData();
       renderAnnounce(DATA.sitio);
+      setupAnnounceHeight();
       renderNav(DATA.categorias);
       renderSocials(DATA.sitio);
       renderMarquee(DATA.sitio.marquee);

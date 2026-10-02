@@ -35,6 +35,8 @@
   --gutter: 24px;
   --header-h: 65px;   /* 64px content + 1px border; verified same at 400px */
   --marquee-h: 44px;
+  --announce-h: 0px;  /* real height set by app.js once the announce bar has (or hasn't) content; 0 is also the correct no-JS value, since without JS the bar is always empty */
+  --hero-max-h: 1000px;  /* caps how tall the first-screen min-height grows on very tall viewports */
 
   /* hero video overlay: tune here only */
   --hero-scrim: rgba(10,10,10,.62);
@@ -240,10 +242,25 @@ img, svg { display: block; max-width: 100%; }
 /* stays orange always; own hover/focus signal (independent of the crosshair): lift + brightness */
 .btn-hot:hover, .btn-hot:focus-visible { transform: translateY(-2px); filter: brightness(1.1); }
 
-/* ---------- hero (sized to content, not 100vh) ---------- */
+/* ---------- hero (min-height fills the first screen; grows for content, never clips) ---------- */
 .hero {
   position: relative; isolation: isolate; overflow: hidden;
+  /* flex+justify-content:center only ever touches .hero-content — .hero-media is
+     position:absolute, so it's not a flex item and isn't affected by this */
+  display: flex; flex-direction: column; justify-content: center;
   padding-block: clamp(48px, 9vw, 104px) clamp(48px, 8vw, 88px);
+  /* min-height, never height: if the content needs more room than this, the box
+     still grows to fit it — nothing here ever clips.
+     100vh first as the universal fallback (the second declaration overrides it in
+     browsers that understand 100svh; unsupported custom declarations are dropped
+     entirely, never partially applied). vh on iOS Safari includes the address bar's
+     space, svh doesn't — exactly the gap that would otherwise undershoot the fold
+     and leave the marquee short of the viewport's real bottom edge.
+     min() caps the result at --hero-max-h so very tall viewports don't stretch the
+     hero forever; it only caps this min-height value, never the content's own
+     natural height, so point 3 above still holds regardless of the cap. */
+  min-height: min(calc(100vh  - var(--header-h) - var(--marquee-h) - var(--announce-h, 0px)), var(--hero-max-h, 1000px));
+  min-height: min(calc(100svh - var(--header-h) - var(--marquee-h) - var(--announce-h, 0px)), var(--hero-max-h, 1000px));
 }
 /* full-bleed background: .hero is a direct child of <main>, so it already spans the window; media fills it */
 .hero-media { position: absolute; inset: 0; z-index: -1; background: var(--bg); }
