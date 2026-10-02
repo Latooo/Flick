@@ -395,16 +395,19 @@ img, svg { display: block; max-width: 100%; }
 .media.is-agotado img { filter: grayscale(1) brightness(.55); }
 .agotado-ribbon {
   position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%) rotate(-40deg);
+  transform: translate(-50%, -50%) rotate(-20deg);
   width: 150%;
+  z-index: 1;   /* stays above a <img> created later (thumbnail swap after a load error) */
   text-align: center;
+  white-space: nowrap;
   padding-block: 6px;
   font-family: var(--font-display);
-  font-size: 1.05rem;
-  letter-spacing: 2px;
+  font-size: 1.6rem;
+  letter-spacing: 6px;
+  line-height: 1;
   text-transform: uppercase;
   color: var(--text);
-  background: rgba(10,10,10,.7);
+  background: rgba(10,10,10,.8);
   border-block: 1px solid var(--line-strong);
 }
 .ph {
@@ -635,8 +638,11 @@ body.modal-open { overflow: hidden; }
 .xh-r { left: 0;    transform: translateX(var(--gap)); }
 /* is-aim no longer resizes the crosshair (--gap/--s unchanged) — it shows this dot
    instead. Inherits position/color/box-shadow from the shared ".xh i" rule above,
-   is-teal included; only size/shape and the opacity+transform reveal are its own. */
-.xh-dot {
+   is-teal included; only size/shape and the opacity+transform reveal are its own.
+   Selector is ".xh .xh-dot", not just ".xh-dot": "i" + one class on ".xh i" (0,1,1)
+   otherwise outranks a single-class ".xh-dot" (0,1,0) and silently wins border-radius
+   and transition, leaving a 1px square that snaps instead of a circle that fades. */
+.xh .xh-dot {
   width: 4px; height: 4px; left: -2px; top: -2px;
   border-radius: 50%;
   opacity: 0; transform: scale(0);
