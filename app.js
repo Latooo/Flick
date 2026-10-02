@@ -84,6 +84,9 @@ function setupAnnounceHeight() {
     document.documentElement.style.setProperty('--announce-h', announce.getBoundingClientRect().height + 'px');
   }
   measure();
+  // the fallback font can wrap the announce text onto a different number of
+  // lines than Manrope does, especially on narrow viewports
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
   let lastWidth = window.innerWidth;
   window.addEventListener('resize', () => {
     if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; measure(); }
@@ -132,7 +135,12 @@ function renderMarquee(items) {
   $('#marqueeTrack').innerHTML = `<ul class="marquee-set">${seq}</ul>`;
   layoutMarquee();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutMarquee);
-  window.addEventListener('resize', layoutMarquee, { passive: true });
+  // width only: a copy's rendered width can't change from a height-only resize
+  // (iOS fires one when the address bar shows/hides mid-scroll)
+  let lastWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; layoutMarquee(); }
+  }, { passive: true });
 }
 
 const money = (n) => '$' + new Intl.NumberFormat('es-CO').format(n);
@@ -168,10 +176,14 @@ function renderFooterBrand(marcaUpper) {
   const footBrand = $('#footBrand');
   if (marcaUpper !== 'FLICK') {
     footBrand.removeAttribute('aria-label');
+    footBrand.removeAttribute('role');
     footBrand.textContent = marcaUpper;
     return;
   }
   footBrand.textContent = '';
+  // aria-label on a <p> with no role isn't reliably announced — role="img" gives it
+  // one or the label can get ignored entirely depending on the screen reader
+  footBrand.setAttribute('role', 'img');
   footBrand.setAttribute('aria-label', 'Flick');
   const letters = document.createElement('span');
   letters.className = 'logo-letters';
@@ -202,7 +214,11 @@ function setupFooterLogoHover(lettersEl) {
   }
   measure();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-  window.addEventListener('resize', measure, { passive: true });
+  // width only: the L-C gap can't change from a height-only resize
+  let lastWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; measure(); }
+  }, { passive: true });
 }
 
 function renderFooter(sitio) {
@@ -501,7 +517,12 @@ function setupLogoScroll() {
   }
   measureKTravel();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureKTravel);
-  window.addEventListener('resize', measureKTravel, { passive: true });
+  // width only: the L-C gap can't change from a height-only resize (iOS fires one
+  // when the address bar shows/hides mid-scroll)
+  let lastKTravelWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== lastKTravelWidth) { lastKTravelWidth = window.innerWidth; measureKTravel(); }
+  }, { passive: true });
 
   function applyState(isFlk, instant) {
     if (instant) lettersEl.classList.add('no-anim');
