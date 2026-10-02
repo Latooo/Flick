@@ -40,6 +40,20 @@
   --hero-scrim: rgba(10,10,10,.62);
   --hero-saturate: .75;
   --hero-scrim-left: rgba(10,10,10,.45);   /* extra darkening on the text side only */
+
+  /* header logo FLICK<->FLK transition timing: kept in sync with LOGO in app.js,
+     which sets these same values inline — these are just the no-JS/pre-JS fallback */
+  --logo-fall-ms:       120ms;
+  --logo-fall-ease:     cubic-bezier(.5,0,.75,0);
+  --logo-fall-distance: .9em;
+  --logo-close-ms:      140ms;
+  --logo-close-ease:    cubic-bezier(.7,0,.2,1);
+  --logo-close-delay:   100ms;
+  --logo-open-ms:       140ms;
+  --logo-open-ease:     cubic-bezier(.7,0,.2,1);
+  --logo-enter-ms:      120ms;
+  --logo-enter-ease:    cubic-bezier(.5,0,.75,0);
+  --logo-enter-delay:   120ms;
 }
 
 /* ---------- reset ---------- */
@@ -114,11 +128,65 @@ img, svg { display: block; max-width: 100%; }
 }
 .logo:hover { color: var(--accent); }
 .logo {
+  /* inline-flex + align-items so the logo's vertical position comes from flex
+     centering, not line-box baseline alignment — .logo-letters is inline-block
+     with overflow:hidden, which some engines treat as having no baseline of its
+     own (falling back to its bottom margin edge), shifting the whole word up.
+     height:1em pins the container at the ORIGINAL (unpadded) line box height —
+     .logo-letters is taller (it carries its own padding, see there), so centering
+     an over-height flex item in an exact-height container overflows it evenly
+     top and bottom, which is exactly what cancels that padding back out. Without
+     this explicit height, the container just grows to fit the item and centering
+     has nothing left to do, so the padding leaks straight through as a shift. */
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
   font-family: var(--font-display);
   font-size: 2rem;
   letter-spacing: .18em;
   line-height: 1;
 }
+/* clip lives on the wrapper, never on .logo itself — .logo is the focusable <a>,
+   and overflow:hidden there would cut its own focus ring */
+/* Bebas Neue's own ascent/descent exceeds line-height:1 by a few px on each side —
+   harmless on plain text (nothing clipped it before), but overflow:hidden here would
+   cut the resting glyph top and bottom without this padding as a safety margin.
+   The .9em fall distance is far larger, so I/C still clip correctly once animating. */
+/* symmetric on purpose, not the tighter 5px/4px that would just barely cover the
+   glyph overflow: the parent's height:1em centering trick (see .logo/.foot-brand)
+   only cancels this padding out exactly when it's equal top and bottom */
+.logo-letters { display: inline-block; overflow: hidden; padding-block: 6px; }
+.logo-letters > span { display: inline-block; }
+
+.logo-i, .logo-c {
+  opacity: 1;
+  transform: translateY(0);
+  /* resting state IS the "entering FLICK" state: this transition is what plays
+     when .is-flk is removed (scrolling back up) */
+  transition: opacity var(--logo-enter-ms) var(--logo-enter-ease) var(--logo-enter-delay),
+              transform var(--logo-enter-ms) var(--logo-enter-ease) var(--logo-enter-delay);
+}
+.logo-k {
+  transform: translateX(0);
+  transition: transform var(--logo-open-ms) var(--logo-open-ease);
+}
+.logo.is-flk .logo-i,
+.logo.is-flk .logo-c {
+  opacity: 0;
+  transform: translateY(var(--logo-fall-distance));
+  transition: opacity var(--logo-fall-ms) var(--logo-fall-ease),
+              transform var(--logo-fall-ms) var(--logo-fall-ease);
+}
+.logo.is-flk .logo-k {
+  /* --k-travel: set by app.js, measured from the real rendered gap (I + C + their
+     letter-spacing) — never a guessed px value, it depends on the loaded font */
+  transform: translateX(calc(-1 * var(--k-travel, 0px)));
+  transition: transform var(--logo-close-ms) var(--logo-close-ease) var(--logo-close-delay);
+}
+/* temporary, JS-only: suppresses transitions while the initial (pre-scrolled) state
+   is applied, so loading already past the threshold doesn't animate on arrival */
+.logo-letters.no-anim,
+.logo-letters.no-anim * { transition: none !important; }
 .main-nav { display: flex; gap: 32px; }
 .main-nav a {
   font-family: var(--font-display);
@@ -252,24 +320,6 @@ img, svg { display: block; max-width: 100%; }
   padding: 16px 20px;
   max-width: 65ch;
 }
-
-/* ---------- badge row ---------- */
-.badges { padding-bottom: 24px; }
-.badge-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-  gap: 16px;
-}
-.badge-item {
-  display: flex; align-items: center; gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-}
-.badge-item svg { flex: none; color: var(--accent); }
-.badge-title { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 1px; line-height: 1.1; text-transform: uppercase; }
-.badge-sub { color: var(--muted); font-size: .9rem; line-height: 1.4; margin-top: 4px; }
 
 /* ---------- catalog ---------- */
 .catalog { padding-block: 56px 72px; }
@@ -418,7 +468,6 @@ body.modal-open { overflow: hidden; }
 /* ---------- placeholder unit ---------- */
 .ph-unit { font-size: .45em; margin-left: .2em; font-weight: 400; }
 .ph-sm .ph-unit { font-size: .6em; }
-.badge-item svg { width: 22px; height: 22px; }
 
 /* ---------- marquee ---------- */
 .marquee {
@@ -431,7 +480,10 @@ body.modal-open { overflow: hidden; }
   background: var(--surface);
   border-block: 1px solid var(--line);
 }
-.marquee-track { display: flex; width: max-content; animation: marqueeScroll 25s linear infinite; }
+/* --marquee-shift/--marquee-duration: set by layoutMarquee() in app.js from the
+   real rendered width of one copy — never a percentage, so the loop stays seamless
+   regardless of how many copies that width ends up needing for this viewport. */
+.marquee-track { display: flex; width: max-content; animation: marqueeScroll var(--marquee-duration, 25s) linear infinite; }
 .marquee-set { display: flex; flex: none; align-items: center; }
 .marquee-set li {
   font-family: var(--font-display); font-size: 1.5rem; line-height: 1; letter-spacing: 2px; white-space: nowrap;
@@ -441,7 +493,7 @@ body.modal-open { overflow: hidden; }
   content: ""; width: 8px; height: 8px; margin-inline: 28px;
   background: var(--accent); transform: rotate(45deg); flex: none;
 }
-@keyframes marqueeScroll { to { transform: translateX(-50%); } }
+@keyframes marqueeScroll { to { transform: translateX(calc(-1 * var(--marquee-shift, 0px))); } }
 
 /* ---------- delivery band ---------- */
 .delivery { padding-block: 72px; background: var(--surface); border-block: 1px solid var(--line); }
@@ -466,7 +518,29 @@ body.modal-open { overflow: hidden; }
 /* ---------- footer ---------- */
 .site-footer { padding-block: 56px 96px; border-top: 1px solid var(--line); }
 .footer-inner { display: grid; gap: 32px; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
-.foot-brand { font-family: var(--font-display); font-size: 2rem; letter-spacing: .18em; line-height: 1; }
+/* display:flex (not inline-flex) keeps .foot-brand block-level — still stacks above
+   #footCity normally — while fixing the same inline-block+overflow:hidden baseline
+   quirk the header logo has. width:fit-content keeps it from stretching to the
+   column's full width, so :hover below only triggers over the letters themselves,
+   matching how .logo (one level, no wrapper) does it in the header. */
+.foot-brand {
+  display: flex; align-items: center; width: fit-content; height: 1em; /* see .logo for why height:1em matters here */
+  font-family: var(--font-display); font-size: 2rem; letter-spacing: .18em; line-height: 1;
+}
+@media (hover: hover) {
+  /* touch has no real hover: this would just stick after a tap, so it's gated out */
+  .foot-brand:hover .logo-i,
+  .foot-brand:hover .logo-c {
+    opacity: 0;
+    transform: translateY(var(--logo-fall-distance));
+    transition: opacity var(--logo-fall-ms) var(--logo-fall-ease),
+                transform var(--logo-fall-ms) var(--logo-fall-ease);
+  }
+  .foot-brand:hover .logo-k {
+    transform: translateX(calc(-1 * var(--footer-k-travel, 0px)));
+    transition: transform var(--logo-close-ms) var(--logo-close-ease) var(--logo-close-delay);
+  }
+}
 .foot-head { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
 .foot-line { color: var(--muted); margin-top: 6px; }
 .foot-list { margin-top: 6px; display: grid; gap: 2px; }
@@ -534,14 +608,13 @@ body.modal-open { overflow: hidden; }
 
 /* hidden only once app.js commits to playing the intro; never a static default.
    Covers everything outside the hero too — it's sized to its content (not 100vh),
-   so without this the badges/marquee/catalog/footer/wa-float show through beneath
+   so without this the marquee/catalog/footer/wa-float show through beneath
    the curtain during steps 2-4, when only the video is supposed to be visible. */
 .intro-veil.pill,
 .intro-veil.hero-pre,
 .intro-veil.hero-post,
 .intro-veil.hero-sub,
 .intro-veil.hero-actions,
-.intro-veil.badges,
 .intro-veil.marquee,
 .intro-veil.catalog,
 .intro-veil.delivery,

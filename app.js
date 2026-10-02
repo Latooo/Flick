@@ -18,6 +18,25 @@ const INTRO = {
   sessionKey:        'flickIntroPlayed',    // must match the literal in index.html's <head> script
 };
 
+const LOGO = {
+  fallMs:         120,
+  fallEase:       'cubic-bezier(.5,0,.75,0)',
+  fallDistanceEm: 0.9,
+  closeMs:        140,
+  closeEase:      'cubic-bezier(.7,0,.2,1)',
+  closeDelayMs:   100,
+  openMs:         140,
+  openEase:       'cubic-bezier(.7,0,.2,1)',
+  enterMs:        120,
+  enterEase:      'cubic-bezier(.5,0,.75,0)',
+  enterDelayMs:   120,
+  hysteresisPx:   24,
+};
+
+const MARQUEE = {
+  speedPxPerSec: 53,   // matches the pace of the old fixed 25s/2-copy loop at its original content width
+};
+
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -26,9 +45,6 @@ const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ESC[c]);
 const ICONS = {
   instagram: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
   tiktok: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.3 5 4.6"/></svg>',
-  camion: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg>',
-  efectivo: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10v.01M18 14v.01"/></svg>',
-  escudo: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
   warn: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 20h20z"/><path d="M12 10v5M12 17.5v.01"/></svg>',
   wa: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.4-.4.4c-.1.2-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.8 1.2 2.1 1.3.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>'
 };
@@ -72,17 +88,33 @@ function renderSocials(sitio) {
     .join('');
 }
 
-function renderBadges(badges) {
-  $('#badges').innerHTML = (badges || [])
-    .map((b) => `<li class="badge-item">${ICONS[b.icono] || ''}<div><p class="badge-title">${esc(b.titulo)}</p>${hasValue(b.sub) ? `<p class="badge-sub">${esc(b.sub)}</p>` : ''}</div></li>`)
-    .join('');
+// Rebuilds however many copies are needed to cover the viewport with one extra to
+// spare, so the loop never shows a gap at the end of a cycle (a fixed 2 copies +
+// translateX(-50%) only works if one copy is already wider than the viewport).
+// Re-run on resize and once Bebas Neue is actually loaded: both change how wide a
+// single copy renders, same reasons the header logo's --k-travel gets re-measured.
+function layoutMarquee() {
+  const track = $('#marqueeTrack');
+  const firstSet = track ? track.querySelector('.marquee-set') : null;
+  if (!firstSet) return;
+  const seq = firstSet.innerHTML;
+  const copyWidth = firstSet.getBoundingClientRect().width;
+  if (!copyWidth) return;
+  const copies = Math.ceil(window.innerWidth / copyWidth) + 1;
+  const extraCopies = Array.from({ length: Math.max(copies - 1, 0) },
+    () => `<ul class="marquee-set" aria-hidden="true">${seq}</ul>`).join('');
+  track.innerHTML = `<ul class="marquee-set">${seq}</ul>${extraCopies}`;
+  document.documentElement.style.setProperty('--marquee-shift', copyWidth + 'px');
+  document.documentElement.style.setProperty('--marquee-duration', (copyWidth / MARQUEE.speedPxPerSec) + 's');
 }
 
 function renderMarquee(items) {
   if (!items || !items.length) { $('#marquee').hidden = true; return; }
   const seq = items.map((t) => `<li>${esc(t)}</li>`).join('');
-  // duplicated track for a seamless loop; the copy is hidden from assistive tech
-  $('#marqueeTrack').innerHTML = `<ul class="marquee-set">${seq}</ul><ul class="marquee-set" aria-hidden="true">${seq}</ul>`;
+  $('#marqueeTrack').innerHTML = `<ul class="marquee-set">${seq}</ul>`;
+  layoutMarquee();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutMarquee);
+  window.addEventListener('resize', layoutMarquee, { passive: true });
 }
 
 const money = (n) => '$' + new Intl.NumberFormat('es-CO').format(n);
@@ -111,8 +143,52 @@ function renderDelivery(e) {
   $('#deliveryGrid').innerHTML = zone(e.zona_1, 1) + zone(e.zona_2, 2) + pickup + warranty;
 }
 
+// Only "FLICK" gets the letter-spans/hover treatment — renderFooter is driven by
+// sitio.marca, which in principle could be any brand name, and the fall/close
+// animation only makes sense for this exact word.
+function renderFooterBrand(marcaUpper) {
+  const footBrand = $('#footBrand');
+  if (marcaUpper !== 'FLICK') {
+    footBrand.removeAttribute('aria-label');
+    footBrand.textContent = marcaUpper;
+    return;
+  }
+  footBrand.textContent = '';
+  footBrand.setAttribute('aria-label', 'Flick');
+  const letters = document.createElement('span');
+  letters.className = 'logo-letters';
+  letters.setAttribute('aria-hidden', 'true');
+  const classes = { 1: 'logo-l', 2: 'logo-i', 3: 'logo-c', 4: 'logo-k' };
+  'FLICK'.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    if (classes[i]) span.className = classes[i];
+    span.textContent = ch;
+    letters.appendChild(span);
+  });
+  footBrand.appendChild(letters);
+  setupFooterLogoHover(letters);
+}
+
+// Measured separately from the header's --k-travel (own element, own cascade —
+// reusing the header's value would be assuming, not measuring), same idea: real
+// rendered gap between L and C, re-checked once fonts are actually loaded and on
+// resize. No scroll/IntersectionObserver involved here — the trigger is plain
+// CSS :hover, this only keeps the travel distance current.
+function setupFooterLogoHover(lettersEl) {
+  const lSpan = lettersEl.querySelector('.logo-l');
+  const cSpan = lettersEl.querySelector('.logo-c');
+  if (!lSpan || !cSpan) return;
+  function measure() {
+    const travel = (cSpan.offsetLeft + cSpan.offsetWidth) - (lSpan.offsetLeft + lSpan.offsetWidth);
+    document.documentElement.style.setProperty('--footer-k-travel', travel + 'px');
+  }
+  measure();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  window.addEventListener('resize', measure, { passive: true });
+}
+
 function renderFooter(sitio) {
-  $('#footBrand').textContent = sitio.marca.toUpperCase();
+  renderFooterBrand(sitio.marca.toUpperCase());
   $('#footCity').textContent = sitio.ciudad;
   const n = String(sitio.whatsapp);
   const pretty = n.length === 12 ? `+${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5, 8)} ${n.slice(8)}` : `+${n}`;
@@ -371,6 +447,103 @@ function setupCrosshair() {
   document.documentElement.addEventListener('mouseenter', () => { if (seen) xh.classList.add('is-visible'); });
 }
 
+/* ---------- header logo: FLICK <-> FLK across the hero/header boundary ---------- */
+// Pure CSS transitions do the animating; JS only ever toggles .is-flk and keeps
+// --k-travel current. That also means prefers-reduced-motion needs no special case
+// here — the global `transition: none !important` rule already makes every state
+// change instant.
+function setupLogoScroll() {
+  const logoEl = document.querySelector('.logo');
+  const lettersEl = logoEl ? logoEl.querySelector('.logo-letters') : null;
+  const hero = document.querySelector('.hero');
+  const headerEl = document.getElementById('top');
+  const lSpan = lettersEl ? lettersEl.querySelector('.logo-l') : null;
+  const cSpan = lettersEl ? lettersEl.querySelector('.logo-c') : null;
+  if (!logoEl || !lettersEl || !hero || !headerEl || !lSpan || !cSpan) return;
+
+  const root = document.documentElement;
+  root.style.setProperty('--logo-fall-ms', LOGO.fallMs + 'ms');
+  root.style.setProperty('--logo-fall-ease', LOGO.fallEase);
+  root.style.setProperty('--logo-fall-distance', LOGO.fallDistanceEm + 'em');
+  root.style.setProperty('--logo-close-ms', LOGO.closeMs + 'ms');
+  root.style.setProperty('--logo-close-ease', LOGO.closeEase);
+  root.style.setProperty('--logo-close-delay', LOGO.closeDelayMs + 'ms');
+  root.style.setProperty('--logo-open-ms', LOGO.openMs + 'ms');
+  root.style.setProperty('--logo-open-ease', LOGO.openEase);
+  root.style.setProperty('--logo-enter-ms', LOGO.enterMs + 'ms');
+  root.style.setProperty('--logo-enter-ease', LOGO.enterEase);
+  root.style.setProperty('--logo-enter-delay', LOGO.enterDelayMs + 'ms');
+
+  // offsetLeft/offsetWidth, not getBoundingClientRect: the K can already be
+  // mid-transform when this re-runs (resize, font swap), and a rect would fold
+  // that transform into the measurement instead of reading the real layout gap.
+  function measureKTravel() {
+    const travel = (cSpan.offsetLeft + cSpan.offsetWidth) - (lSpan.offsetLeft + lSpan.offsetWidth);
+    logoEl.style.setProperty('--k-travel', travel + 'px');
+  }
+  measureKTravel();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureKTravel);
+  window.addEventListener('resize', measureKTravel, { passive: true });
+
+  function applyState(isFlk, instant) {
+    if (instant) lettersEl.classList.add('no-anim');
+    logoEl.classList.toggle('is-flk', isFlk);
+    if (instant) {
+      void lettersEl.offsetHeight; // force reflow before re-enabling transitions
+      lettersEl.classList.remove('no-anim');
+    }
+  }
+
+  const headerHeight = headerEl.getBoundingClientRect().height;
+  const half = LOGO.hysteresisPx / 2;
+
+  // No separate "initial state" read via getBoundingClientRect(), no fixed grace
+  // period, and no polling scrollY for stability either (both tried first: a
+  // #catalogo entry has scroll-behavior:smooth on <html>, so the browser's own
+  // scroll-to-anchor can still be actively moving well past any fixed window or
+  // even start after a few already-stable polling reads, wrongly declaring
+  // "settled" before it begins; a reload's scroll restoration races this script the
+  // same way the intro's own <head> scrollY check does). Instead: listen for real
+  // `scroll` events and wait for a quiet period after the last one. Any observer
+  // update that lands before that quiet period — the real initial one included,
+  // however long the browser's own automatic scroll takes to finish — is applied
+  // instantly; once scrolling has demonstrably gone idle, updates animate normally.
+  let currentIsFlk = false;
+  let scrollSettled = false;
+  let settleTimer = null;
+  const armSettleTimer = () => {
+    if (settleTimer) clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      scrollSettled = true;
+      window.removeEventListener('scroll', armSettleTimer);
+    }, 150);
+  };
+  armSettleTimer(); // covers the case where nothing ever scrolls at all
+  window.addEventListener('scroll', armSettleTimer, { passive: true });
+
+  // two observers, not one: a single boundary fires the same way in both scroll
+  // directions, which is exactly what hysteresis has to avoid. The close line sits
+  // above the open line, so there's a dead band between them where neither fires.
+  const closeObserver = new IntersectionObserver((entries) => {
+    const entry = entries[entries.length - 1];
+    if (!entry.isIntersecting && !currentIsFlk) {
+      currentIsFlk = true;
+      applyState(true, !scrollSettled);
+    }
+  }, { rootMargin: `-${headerHeight - half}px 0px 0px 0px`, threshold: 0 });
+
+  const openObserver = new IntersectionObserver((entries) => {
+    const entry = entries[entries.length - 1];
+    if (entry.isIntersecting && currentIsFlk) {
+      currentIsFlk = false;
+      applyState(false, !scrollSettled);
+    }
+  }, { rootMargin: `-${headerHeight + half}px 0px 0px 0px`, threshold: 0 });
+
+  closeObserver.observe(hero);
+  openObserver.observe(hero);
+}
+
 /* ---------- intro splash ---------- */
 // Runs only if index.html's <head> script already decided to (html.intro-lock present).
 // Every exit path funnels through finalize(), which is safe to call at any point —
@@ -505,7 +678,7 @@ function revealHeroContent(els, trackAnim) {
 
 async function playSequence(ctx) {
   const { curtain, flk, flick, announceEl, headerEl, pill, pre, post, sub, actions,
-    badges, marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled } = ctx;
+    marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled } = ctx;
 
   const startH = curtain.getBoundingClientRect().height;
   const targetH = announceEl.getBoundingClientRect().height + headerEl.getBoundingClientRect().height;
@@ -535,7 +708,7 @@ async function playSequence(ctx) {
   // masked by the bigger reveal happening at the same time
   await Promise.all([
     tweenScrim(INTRO.scrimBright, INTRO.scrimRest, INTRO.revealMs, isCancelled),
-    revealHeroContent([pill, pre, post, sub, actions, badges, marquee, catalog, delivery, footer, waFloat], trackAnim),
+    revealHeroContent([pill, pre, post, sub, actions, marquee, catalog, delivery, footer, waFloat], trackAnim),
     trackAnim(curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: INTRO.revealMs, easing: 'ease', fill: 'forwards' })).finished,
   ]);
 }
@@ -544,11 +717,14 @@ async function runIntro(dataPromise) {
   const html = document.documentElement;
   let crosshairStarted = false;
   const ensureCrosshair = () => { if (!crosshairStarted) { crosshairStarted = true; setupCrosshair(); } };
-  // finalize() is the only place that starts the crosshair (guarded by the flag above):
-  // if the hard cap fires while something upstream is stuck awaiting (rAF in a
-  // backgrounded tab never ticks, for instance), runIntro itself may stay suspended
-  // forever, but finalize() still ran synchronously, so the crosshair isn't lost with it.
-  if (!html.classList.contains('intro-lock')) { ensureCrosshair(); return; }
+  let logoScrollStarted = false;
+  const ensureLogoScroll = () => { if (!logoScrollStarted) { logoScrollStarted = true; setupLogoScroll(); } };
+  // finalize() is the only place that starts the crosshair and the header-logo
+  // scroll behavior (both guarded by their own flag above): if the hard cap fires
+  // while something upstream is stuck awaiting (rAF in a backgrounded tab never
+  // ticks, for instance), runIntro itself may stay suspended forever, but finalize()
+  // still ran synchronously, so neither gets lost with it.
+  if (!html.classList.contains('intro-lock')) { ensureCrosshair(); ensureLogoScroll(); return; }
 
   const handoff = performance.now();
   let cancelled = false;
@@ -579,6 +755,7 @@ async function runIntro(dataPromise) {
     const skipLink = document.querySelector('.skip-link');
     if (skipLink) skipLink.inert = false;
     ensureCrosshair();
+    ensureLogoScroll();
   }
 
   try {
@@ -591,7 +768,6 @@ async function runIntro(dataPromise) {
     const post = $('.hero-post');
     const sub = $('.hero-sub');
     const actions = $('.hero-actions');
-    const badges = $('.badges');
     const marquee = document.getElementById('marquee');
     const catalog = document.getElementById('catalogo');
     const delivery = document.getElementById('entrega');
@@ -601,7 +777,7 @@ async function runIntro(dataPromise) {
     const headerEl = document.getElementById('top');
     const video = document.querySelector('.hero-video');
 
-    [pill, pre, flick, post, sub, actions, badges, marquee, catalog, delivery, footer, waFloat].forEach((el) => el && el.classList.add('intro-veil'));
+    [pill, pre, flick, post, sub, actions, marquee, catalog, delivery, footer, waFloat].forEach((el) => el && el.classList.add('intro-veil'));
 
     const page = document.getElementById('page');
     if (page) page.inert = true;
@@ -647,7 +823,7 @@ async function runIntro(dataPromise) {
     if (cancelled || !ready) { finalize(); return; }
 
     await playSequence({ curtain, flk, flick, announceEl, headerEl, pill, pre, post, sub, actions,
-      badges, marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled });
+      marquee, catalog, delivery, footer, waFloat, trackAnim, isCancelled });
     finalize();
   } catch (err) {
     // cancel() on a tracked animation rejects its .finished with AbortError — expected
@@ -676,7 +852,6 @@ async function init() {
       renderAnnounce(DATA.sitio);
       renderNav(DATA.categorias);
       renderSocials(DATA.sitio);
-      renderBadges(DATA.sitio.badges);
       renderMarquee(DATA.sitio.marquee);
       renderDelivery(DATA.sitio.entrega);
       renderFooter(DATA.sitio);

@@ -12,23 +12,6 @@
     "tiktok": null,
     "mostrar_precios": false,
     "mensaje_whatsapp": "Hola, me interesa el {producto}",
-    "badges": [
-      {
-        "titulo": "Entrega a domicilio",
-        "sub": "Bucaramanga y área metropolitana",
-        "icono": "camion"
-      },
-      {
-        "titulo": "Pago contraentrega",
-        "sub": "Pagas cuando lo recibes",
-        "icono": "efectivo"
-      },
-      {
-        "titulo": "Garantía 1 mes",
-        "sub": "Respaldo directo con nosotros",
-        "icono": "escudo"
-      }
-    ],
     "marquee": [
       "ATTACK SHARK",
       "VXE",
