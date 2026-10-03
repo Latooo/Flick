@@ -1,7 +1,7 @@
 {
   "_meta": {
     "proyecto": "Flick — catálogo web",
-    "version": "1.2",
+    "version": "1.3",
     "nota": "Fuente única de contenido del catálogo. La página lo carga en runtime."
   },
   "sitio": {
@@ -63,7 +63,9 @@
       "marca": "Attack Shark",
       "categoria": "mouses",
       "destacado": true,
-      "colores": [],
+      "colores": [
+        "Negro"
+      ],
       "gancho": "49 gramos con sensor de gama alta.",
       "descripcion": "El más liviano del catálogo. Pesa la mitad que un mouse convencional y monta el PixArt PAW3395, el mismo sensor que usan mouses de gama competitiva. Batería para 200 horas.",
       "specs": {
@@ -79,37 +81,39 @@
       "fotos": [
         "img/x3-1.jpg",
         "img/x3-2.jpg",
-        "img/x3-3.jpg"
+        "img/x3-3.jpg",
+        "img/x3-4.jpg"
       ],
       "placeholder": "49 g",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
-      "id": "ajazz-aj159-pro",
-      "nombre": "AJAZZ AJ159 PRO 8K",
+      "id": "ajazz-aj159",
+      "nombre": "AJAZZ AJ159",
       "marca": "AJAZZ",
       "categoria": "mouses",
       "destacado": true,
       "colores": [
         "Blanco"
       ],
-      "gancho": "8000 Hz de polling. Base de carga incluida.",
-      "descripcion": "Sensor PAW3395 y 8000 Hz de tasa de sondeo — ocho veces el estándar. Viene con base de carga que además guarda el receptor. Es la opción para quien juega competitivo.",
+      "gancho": "Sensor PAW3395, inalámbrico o por cable.",
+      "descripcion": "Monta el PixArt PAW3395, el mismo sensor del Attack Shark X3. Funciona inalámbrico con su receptor USB de 2.4 GHz o conectado por cable.",
       "specs": {
         "Sensor": "PixArt PAW3395",
-        "Polling rate": "8000 Hz",
-        "Conectividad": "2.4 GHz / Bluetooth / cable",
-        "Extras": "Base de carga con receptor integrado",
+        "Polling rate": null,
+        "Conectividad": "2.4 GHz / cable",
+        "Extras": null,
         "Peso": null
       },
-      "nota_honesta": null,
+      "nota_honesta": "No trae Bluetooth ni base de carga. Se conecta con su receptor USB o por cable.",
       "fotos": [
         "img/aj159-1.jpg",
         "img/aj159-2.jpg",
-        "img/aj159-3.jpg"
+        "img/aj159-3.jpg",
+        "img/aj159-4.jpg"
       ],
-      "placeholder": "8000 Hz",
-      "tiene_fotos": false
+      "placeholder": "PAW3395",
+      "tiene_fotos": true
     },
     {
       "id": "as-x11",
@@ -142,7 +146,7 @@
         "img/x11-3.jpg"
       ],
       "placeholder": "63 g",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
       "id": "vxe-r1-se-plus",
@@ -165,10 +169,11 @@
       "fotos": [
         "img/r1-1.jpg",
         "img/r1-2.jpg",
-        "img/r1-3.jpg"
+        "img/r1-3.jpg",
+        "img/r1-4.jpg"
       ],
       "placeholder": "55 g",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
       "id": "as-m86",
@@ -176,7 +181,9 @@
       "marca": "Attack Shark",
       "categoria": "teclados",
       "destacado": true,
-      "colores": [],
+      "colores": [
+        "Negro con teclas en degradé gris"
+      ],
       "gancho": "75 % con montaje gasket y hot-swap.",
       "descripcion": "Formato 75 % de 82 teclas: conserva las funciones y las flechas sin ocupar todo el escritorio. Montaje gasket, switches prelubricados y hot-swap para cambiarlos sin soldar.",
       "specs": {
@@ -184,16 +191,18 @@
         "Montaje": "Gasket",
         "Hot-swap": "Sí",
         "Keycaps": "PBT side-print",
-        "Switches": "Prelubricados de fábrica"
+        "Switches": "Prelubricados de fábrica",
+        "Iluminación": "RGB"
       },
       "nota_honesta": null,
       "fotos": [
         "img/m86-1.jpg",
         "img/m86-2.jpg",
-        "img/m86-3.jpg"
+        "img/m86-3.jpg",
+        "img/m86-4.jpg"
       ],
       "placeholder": "75%",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
       "id": "as-l80",
@@ -216,11 +225,10 @@
       "nota_honesta": null,
       "fotos": [
         "img/l80-1.jpg",
-        "img/l80-2.jpg",
-        "img/l80-3.jpg"
+        "img/l80-2.jpg"
       ],
       "placeholder": "50 h",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
       "id": "onikuma-gt808",
@@ -229,7 +237,9 @@
       "categoria": "audio",
       "destacado": false,
       "agotado": true,
-      "colores": [],
+      "colores": [
+        "Negro"
+      ],
       "gancho": "60 horas y micrófono desmontable.",
       "descripcion": "Tres modos de conexión, 60 horas de batería y micrófono desmontable con cancelación de ruido. Se quita el micrófono y sirve como audífono normal para salir.",
       "specs": {
@@ -241,11 +251,10 @@
       "nota_honesta": null,
       "fotos": [
         "img/gt808-1.jpg",
-        "img/gt808-2.jpg",
-        "img/gt808-3.jpg"
+        "img/gt808-2.jpg"
       ],
       "placeholder": "60 h",
-      "tiene_fotos": false
+      "tiene_fotos": true
     },
     {
       "id": "pad-hoswn-60",
@@ -254,7 +263,7 @@
       "categoria": "superficies",
       "destacado": true,
       "colores": [
-        "Negro"
+        "Negro con ondas moradas"
       ],
       "gancho": "Microfibra de verdad, no poliéster.",
       "descripcion": "Superficie de microfibra con base de caucho natural y bordes cosidos. Probamos tres mousepads del pedido y este fue el único que nos convenció al tacto.",
@@ -295,7 +304,7 @@
         "img/basico-2.jpg"
       ],
       "placeholder": "XL",
-      "tiene_fotos": false
+      "tiene_fotos": true
     }
   ]
 }
