@@ -2,7 +2,7 @@
 
 **Tienda de periféricos gaming importados en Bucaramanga, Colombia.**
 
-Catálogo en línea: **https://latooo.github.io/Flick/**
+Catálogo en línea: **https://flickcol.netlify.app**
 
 ## Qué es Flick
 
