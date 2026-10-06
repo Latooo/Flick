@@ -391,7 +391,7 @@ img, svg { display: block; max-width: 100%; }
 .price-label { font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .price-reg s { font-size: .95rem; color: var(--muted); text-decoration-thickness: 1px; }
 .price-val { font-family: var(--font-display); font-size: 1.9rem; letter-spacing: 1px; line-height: 1; color: var(--hot); font-weight: 400; }
-.price-promo .price-now .price-label { color: var(--accent); }
+.price-promo .price-now .price-label { color: var(--hot); }
 .price-cond { font-size: .85rem; color: var(--muted); margin-top: 2px; }
 
 
