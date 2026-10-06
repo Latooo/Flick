@@ -255,6 +255,21 @@ function setupNavToggle() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
 }
 
+/* ---------- price ---------- */
+const isInt = (v) => Number.isInteger(v);
+
+// '' unless prices are on, the product is in stock and precio is an integer.
+// precio_regular only counts when it is an integer above precio.
+function priceHTML(p, { cond = false } = {}) {
+  if (DATA.sitio.mostrar_precios !== true || p.agotado || !isInt(p.precio)) return '';
+  if (isInt(p.precio_regular) && p.precio_regular > p.precio) {
+    const label = hasValue(DATA.sitio.promo_etiqueta) ? `<span class="price-label">${esc(DATA.sitio.promo_etiqueta)}</span>` : '';
+    const note = cond && hasValue(DATA.sitio.promo_condicion) ? `<p class="price-cond">${esc(DATA.sitio.promo_condicion)}</p>` : '';
+    return `<div class="price price-promo"><p class="price-reg"><span class="price-label">Precio regular</span><s>${money(p.precio_regular)}</s></p><p class="price-now">${label}<strong class="price-val">${money(p.precio)}</strong></p>${note}</div>`;
+  }
+  return `<div class="price"><p class="price-now"><strong class="price-val">${money(p.precio)}</strong></p></div>`;
+}
+
 /* ---------- media with placeholder ---------- */
 // Placeholder always sits underneath; the <img> hides itself if the file is missing.
 // "49 g" -> number + unit spans; "60×30", "75%", "XL" stay whole
@@ -309,6 +324,7 @@ function renderGrid() {
           <p class="brand">${esc(p.marca)}</p>
           <h3 class="card-name">${esc(p.nombre)}</h3>
           ${hasValue(p.gancho) ? `<p class="card-hook">${esc(p.gancho)}</p>` : ''}
+          ${priceHTML(p)}
         </div>
       </article>`)
     .join('');
@@ -367,6 +383,7 @@ function modalHTML(p) {
     <div class="info">
       <p class="brand">${esc(p.marca)}</p>
       <h2 class="modal-name" id="modalTitle">${esc(p.nombre)}${p.agotado ? ' <span class="agotado-tag">Agotado</span>' : ''}</h2>
+      ${priceHTML(p, { cond: true })}
       ${hasValue(p.gancho) ? `<p class="lead">${esc(p.gancho)}</p>` : ''}
       ${hasValue(p.descripcion) ? `<p class="desc">${esc(p.descripcion)}</p>` : ''}
       ${specs.length ? `<table class="specs"><caption class="sr-only" style="position:absolute;left:-9999px">Especificaciones</caption><tbody>${specs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>` : ''}
