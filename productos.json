@@ -289,13 +289,13 @@
         "Base": "Caucho natural antideslizante",
         "Bordes": "Cosidos"
       },
-      "nota_honesta": null,
+      "nota_honesta": "Imagen de referencia. El diseño real puede variar.",
       "fotos": [
         "img/hoswn-1.jpg",
         "img/hoswn-2.jpg"
       ],
       "placeholder": "60×30",
-      "tiene_fotos": false,
+      "tiene_fotos": true,
       "precio": 25000,
       "precio_regular": null
     },
