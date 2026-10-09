@@ -125,9 +125,11 @@ img, svg { display: block; max-width: 100%; }
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 100%;
 }
+/* logo + socials sit on the left; nav (desktop) / menu button (mobile) is pushed right */
+.header-inner .socials { margin-left: 16px; }
+.main-nav, .nav-toggle { margin-left: auto; }
 .logo:hover { color: var(--accent); }
 .logo {
   /* inline-flex + align-items so the logo's vertical position comes from flex
