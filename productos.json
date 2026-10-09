@@ -14,6 +14,7 @@
     "promo_etiqueta": "Precio de lanzamiento",
     "promo_condicion": "Primer lote, hasta agotar existencias",
     "mensaje_whatsapp": "Hola, me interesa el {producto}",
+    "mensaje_whatsapp_general": "Hola, vengo de la página de Flick y quiero más información.",
     "mensaje_whatsapp_agotado": "Hola, ¿van a volver a traer el {producto}?",
     "marquee": [
       "ATTACK SHARK",
@@ -97,6 +98,7 @@
       "marca": "AJAZZ",
       "categoria": "mouses",
       "destacado": true,
+      "agotado": true,
       "colores": [
         "Blanco"
       ],
@@ -191,6 +193,7 @@
       "marca": "Attack Shark",
       "categoria": "teclados",
       "destacado": true,
+      "agotado": true,
       "colores": [
         "Negro con teclas en degradé gris"
       ],
@@ -278,6 +281,7 @@
       "marca": "HOSWN",
       "categoria": "superficies",
       "destacado": true,
+      "agotado": true,
       "colores": [
         "Negro con ondas moradas"
       ],
@@ -305,6 +309,7 @@
       "marca": "Genérico",
       "categoria": "superficies",
       "destacado": false,
+      "agotado": true,
       "colores": [
         "Anime 80 × 30",
         "Japonés 90 × 40"

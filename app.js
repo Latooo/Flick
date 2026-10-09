@@ -175,15 +175,29 @@ function renderDelivery(e) {
 // Only "FLICK" gets the letter-spans/hover treatment — renderFooter is driven by
 // sitio.marca, which in principle could be any brand name, and the fall/close
 // animation only makes sense for this exact word.
+function createBrandDisc() {
+  const img = document.createElement('img');
+  img.className = 'brand-disc';
+  img.src = 'img/marca/flick-simbolo.svg';
+  img.alt = '';
+  img.setAttribute('aria-hidden', 'true');
+  img.width = 40;
+  img.height = 40;
+  return img;
+}
+
 function renderFooterBrand(marcaUpper) {
   const footBrand = $('#footBrand');
   if (marcaUpper !== 'FLICK') {
     footBrand.removeAttribute('aria-label');
     footBrand.removeAttribute('role');
-    footBrand.textContent = marcaUpper;
+    footBrand.textContent = '';
+    footBrand.appendChild(createBrandDisc());
+    footBrand.appendChild(document.createTextNode(marcaUpper));
     return;
   }
   footBrand.textContent = '';
+  footBrand.appendChild(createBrandDisc());
   // aria-label on a <p> with no role isn't reliably announced — role="img" gives it
   // one or the label can get ignored entirely depending on the screen reader
   footBrand.setAttribute('role', 'img');
@@ -230,11 +244,14 @@ function renderFooter(sitio) {
   const n = String(sitio.whatsapp);
   const pretty = n.length === 12 ? `+${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5, 8)} ${n.slice(8)}` : `+${n}`;
   const wa = $('#footWa');
-  wa.href = `https://wa.me/${n}`;
+  const waUrl = hasValue(sitio.mensaje_whatsapp_general)
+    ? `https://wa.me/${n}?text=${encodeURIComponent(sitio.mensaje_whatsapp_general)}`
+    : `https://wa.me/${n}`;
+  wa.href = waUrl;
   wa.textContent = pretty;
   $('#footCats').innerHTML = DATA.categorias.map((c) => `<li><a href="#catalogo" data-cat="${esc(c.id)}">${esc(c.nombre)}</a></li>`).join('');
   $('#footSocials').innerHTML = $('#socials').innerHTML;
-  $('#floatWa').href = `https://wa.me/${n}`;
+  $('#floatWa').href = waUrl;
 }
 
 function setupNavToggle() {

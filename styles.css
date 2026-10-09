@@ -157,6 +157,10 @@ img, svg { display: block; max-width: 100%; }
 /* symmetric on purpose, not the tighter 5px/4px that would just barely cover the
    glyph overflow: the parent's height:1em centering trick (see .logo/.foot-brand)
    only cancels this padding out exactly when it's equal top and bottom */
+/* decorative disc left of the wordmark. The SVG carries ~23% empty margin on every
+   side, so negative margins trim it to a ~10px visible gap; flex:none keeps it from
+   shrinking, and being a sibling of .logo-letters it never touches the K-travel math */
+.brand-disc { display: block; flex: none; width: 40px; height: 40px; margin-inline: -9px 1px; }
 .logo-letters { display: inline-block; overflow: hidden; padding-block: 6px; }
 .logo-letters > span { display: inline-block; }
 
