@@ -164,6 +164,7 @@
       "marca": "VXE",
       "categoria": "mouses",
       "destacado": false,
+      "agotado": true,
       "colores": [
         "Negro"
       ],
