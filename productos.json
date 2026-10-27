@@ -1,7 +1,7 @@
 {
   "_meta": {
     "proyecto": "Flick — catálogo web",
-    "version": "1.4",
+    "version": "1.5",
     "nota": "Fuente única de contenido del catálogo. La página lo carga en runtime."
   },
   "sitio": {
@@ -130,8 +130,7 @@
       "categoria": "mouses",
       "destacado": true,
       "colores": [
-        "Negro",
-        "Blanco"
+        "Blanco con pegatinas"
       ],
       "gancho": "Inalámbrico con base de carga RGB.",
       "descripcion": "63 gramos, tres modos de conexión y base de carga magnética con RGB. Se deja en la base y siempre está cargado. Es el más equilibrado del catálogo entre precio y prestaciones.",
@@ -156,7 +155,7 @@
       "placeholder": "63 g",
       "tiene_fotos": true,
       "precio": 99000,
-      "precio_regular": 119000
+      "precio_regular": null
     },
     {
       "id": "vxe-r1-se-plus",
@@ -164,7 +163,6 @@
       "marca": "VXE",
       "categoria": "mouses",
       "destacado": false,
-      "agotado": true,
       "colores": [
         "Negro"
       ],
@@ -185,8 +183,8 @@
       ],
       "placeholder": "55 g",
       "tiene_fotos": true,
-      "precio": 90000,
-      "precio_regular": 109000
+      "precio": 95000,
+      "precio_regular": null
     },
     {
       "id": "as-m86",
@@ -330,6 +328,149 @@
       "placeholder": "XL",
       "tiene_fotos": true,
       "precio": null,
+      "precio_regular": null
+    },
+    {
+      "id": "as-x11-pro-v2",
+      "nombre": "Attack Shark X11 PRO V2",
+      "marca": "Attack Shark",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Blanco y negro",
+        "Negro"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/x11pro-1.jpg",
+        "img/x11pro-2.jpg",
+        "img/x11pro-3.jpg",
+        "img/x11pro-4.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 149000,
+      "precio_regular": null
+    },
+    {
+      "id": "ajazz-aj139-v2",
+      "nombre": "AJAZZ AJ139 V2",
+      "marca": "AJAZZ",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Rojo",
+        "Negro"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/aj139-1.jpg",
+        "img/aj139-2.jpg",
+        "img/aj139-3.jpg",
+        "img/aj139-4.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 119000,
+      "precio_regular": null
+    },
+    {
+      "id": "ajazz-aj199",
+      "nombre": "AJAZZ AJ199",
+      "marca": "AJAZZ",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/aj199-1.jpg",
+        "img/aj199-2.jpg",
+        "img/aj199-3.jpg",
+        "img/aj199-4.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 99000,
+      "precio_regular": null
+    },
+    {
+      "id": "aula-sc620",
+      "nombre": "AULA SC620",
+      "marca": "AULA",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Blanco con dibujo topográfico",
+        "Negro"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/sc620-1.jpg",
+        "img/sc620-2.jpg",
+        "img/sc620-3.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 95000,
+      "precio_regular": null
+    },
+    {
+      "id": "aula-f99-pro",
+      "nombre": "AULA F99 Pro",
+      "marca": "AULA",
+      "categoria": "teclados",
+      "destacado": false,
+      "colores": [
+        "Negro con teclas en degradé gris"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/f99-1.jpg",
+        "img/f99-2.jpg",
+        "img/f99-3.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 265000,
+      "precio_regular": null
+    },
+    {
+      "id": "aula-f87-pro",
+      "nombre": "AULA F87 Pro",
+      "marca": "AULA",
+      "categoria": "teclados",
+      "destacado": false,
+      "colores": [
+        "Blanco, negro y azul"
+      ],
+      "gancho": null,
+      "descripcion": null,
+      "specs": null,
+      "nota_honesta": null,
+      "fotos": [
+        "img/f87-1.jpg",
+        "img/f87-2.jpg"
+      ],
+      "placeholder": null,
+      "tiene_fotos": true,
+      "precio": 249000,
       "precio_regular": null
     }
   ]
