@@ -340,17 +340,25 @@
         "Blanco y negro",
         "Negro"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
+      "gancho": "Base de carga con pantalla que muestra DPI y batería.",
+      "descripcion": "La versión PRO del X11: sensor PixArt PAW3315 de hasta 30 000 DPI y base de carga magnética con pantalla a color que muestra el DPI, el polling rate y la batería. El receptor va dentro de la base, así que no hay dongle suelto.",
+      "specs": {
+        "Sensor": "PixArt PAW3315",
+        "DPI": "30 000",
+        "Polling rate": "1000 Hz",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "260 h",
+        "Extras": "Base magnética con pantalla y receptor integrado"
+      },
       "nota_honesta": null,
       "fotos": [
         "img/x11pro-1.jpg",
         "img/x11pro-2.jpg",
         "img/x11pro-3.jpg",
-        "img/x11pro-4.jpg"
+        "img/x11pro-4.jpg",
+        "img/x11pro-5.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "30K DPI",
       "tiene_fotos": true,
       "precio": 149000,
       "precio_regular": null
@@ -365,9 +373,17 @@
         "Rojo",
         "Negro"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
+      "gancho": "Base de carga magnética con RGB.",
+      "descripcion": "66 gramos, sensor PixArt PAW3311 y base magnética con RGB para dejarlo cargando. Batería de 500 mAh.",
+      "specs": {
+        "Peso": "66 g",
+        "Sensor": "PixArt PAW3311",
+        "Polling rate": "1000 Hz",
+        "Conectividad": "2.4 GHz / cable",
+        "Batería": "500 mAh",
+        "Medidas": "125 × 63 × 38 mm",
+        "Extras": "Base de carga magnética RGB"
+      },
       "nota_honesta": null,
       "fotos": [
         "img/aj139-1.jpg",
@@ -375,7 +391,7 @@
         "img/aj139-3.jpg",
         "img/aj139-4.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "66 g",
       "tiene_fotos": true,
       "precio": 119000,
       "precio_regular": null
@@ -389,17 +405,26 @@
       "colores": [
         "Negro"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
-      "nota_honesta": null,
+      "gancho": "58 gramos con carcasa de fibra de carbono.",
+      "descripcion": "Carcasa de fibra de carbono con textura, 58 gramos y sensor PixArt PAW3311. Se conecta por receptor 2.4 GHz, Bluetooth o cable.",
+      "specs": {
+        "Peso": "58 g",
+        "Sensor": "PixArt PAW3311",
+        "DPI": "12 000",
+        "Polling rate": "1000 Hz (125 Hz por Bluetooth)",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "500 mAh",
+        "Carcasa": "Fibra de carbono + PC",
+        "Medidas": "119 × 62 × 40 mm"
+      },
+      "nota_honesta": "Para jugar usa el receptor 2.4 GHz: por Bluetooth trabaja a 125 Hz.",
       "fotos": [
         "img/aj199-1.jpg",
         "img/aj199-2.jpg",
         "img/aj199-3.jpg",
         "img/aj199-4.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "58 g",
       "tiene_fotos": true,
       "precio": 99000,
       "precio_regular": null
@@ -414,16 +439,27 @@
         "Blanco con dibujo topográfico",
         "Negro"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
-      "nota_honesta": null,
+      "gancho": "Carcasa calada con RGB y tres modos de conexión.",
+      "descripcion": "Carcasa calada que deja ver el RGB, 67 gramos y sensor PixArt PAW3311 de hasta 12 000 DPI. Funciona por receptor 2.4 GHz, Bluetooth o cable.",
+      "specs": {
+        "Peso": "67 g",
+        "Sensor": "PixArt PAW3311",
+        "DPI": "12 000",
+        "Polling rate": "1000 Hz (125 Hz por Bluetooth)",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "400 mAh",
+        "Medidas": "122 × 64 × 40 mm",
+        "Iluminación": "RGB"
+      },
+      "nota_honesta": "Para jugar usa el receptor 2.4 GHz: por Bluetooth trabaja a 125 Hz.",
       "fotos": [
         "img/sc620-1.jpg",
         "img/sc620-2.jpg",
-        "img/sc620-3.jpg"
+        "img/sc620-3.jpg",
+        "img/sc620-4.jpg",
+        "img/sc620-5.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "67 g",
       "tiene_fotos": true,
       "precio": 95000,
       "precio_regular": null
@@ -437,16 +473,25 @@
       "colores": [
         "Negro con teclas en degradé gris"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
+      "gancho": "96 % con teclado numérico, perilla y 8000 mAh.",
+      "descripcion": "Formato 96 % de 100 teclas: trae teclado numérico sin ocupar lo que ocupa uno completo. Montaje gasket, hot-swap para cambiar switches sin soldar, perilla multimedia y batería de 8000 mAh.",
+      "specs": {
+        "Formato": "96 % — 100 teclas",
+        "Montaje": "Gasket",
+        "Hot-swap": "Sí (3 y 5 pines)",
+        "Keycaps": "PBT",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Batería": "8000 mAh",
+        "Iluminación": "RGB",
+        "Extras": "Perilla multimedia"
+      },
       "nota_honesta": null,
       "fotos": [
         "img/f99-1.jpg",
         "img/f99-2.jpg",
         "img/f99-3.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "96%",
       "tiene_fotos": true,
       "precio": 265000,
       "precio_regular": null
@@ -460,15 +505,22 @@
       "colores": [
         "Blanco, negro y azul"
       ],
-      "gancho": null,
-      "descripcion": null,
-      "specs": null,
+      "gancho": "TKL con montaje gasket y tres modos de conexión.",
+      "descripcion": "Formato TKL de 87 teclas: deja afuera el teclado numérico y conserva las funciones y las flechas. Montaje gasket, hot-swap y conexión por receptor 2.4 GHz, Bluetooth o cable.",
+      "specs": {
+        "Formato": "TKL (80 %) — 87 teclas",
+        "Montaje": "Gasket",
+        "Hot-swap": "Sí",
+        "Keycaps": "PBT",
+        "Conectividad": "2.4 GHz / Bluetooth / cable",
+        "Iluminación": "RGB"
+      },
       "nota_honesta": null,
       "fotos": [
         "img/f87-1.jpg",
         "img/f87-2.jpg"
       ],
-      "placeholder": null,
+      "placeholder": "TKL",
       "tiene_fotos": true,
       "precio": 249000,
       "precio_regular": null
