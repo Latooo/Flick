@@ -1,7 +1,7 @@
 {
   "_meta": {
     "proyecto": "Flick — catálogo web",
-    "version": "1.5",
+    "version": "1.6",
     "nota": "Fuente única de contenido del catálogo. La página lo carga en runtime."
   },
   "sitio": {
@@ -20,6 +20,8 @@
       "ATTACK SHARK",
       "VXE",
       "AJAZZ",
+      "AULA",
+      "KZ",
       "ONIKUMA",
       "PAGO CONTRAENTREGA",
       "ENTREGA EN BUCARAMANGA",
@@ -52,7 +54,7 @@
     },
     {
       "id": "audio",
-      "nombre": "Headset"
+      "nombre": "Audio"
     },
     {
       "id": "superficies",
@@ -66,6 +68,7 @@
       "marca": "Attack Shark",
       "categoria": "mouses",
       "destacado": true,
+      "agotado": true,
       "colores": [
         "Negro"
       ],
@@ -98,7 +101,6 @@
       "marca": "AJAZZ",
       "categoria": "mouses",
       "destacado": true,
-      "agotado": true,
       "colores": [
         "Blanco"
       ],
@@ -121,7 +123,7 @@
       "placeholder": "PAW3395",
       "tiene_fotos": true,
       "precio": 99000,
-      "precio_regular": 119000
+      "precio_regular": null
     },
     {
       "id": "as-x11",
@@ -533,6 +535,203 @@
       "placeholder": "TKL",
       "tiene_fotos": true,
       "precio": 249000,
+      "precio_regular": null
+    },
+    {
+      "id": "as-x68he",
+      "nombre": "Attack Shark X68HE",
+      "marca": "Attack Shark",
+      "categoria": "teclados",
+      "destacado": true,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "Switches magnéticos con rapid trigger.",
+      "descripcion": "Teclado 60 % con switches magnéticos. Cada tecla se ajusta para activar entre 0,1 y 3,4 mm, y con rapid trigger se reactiva apenas empieza a subir. 8000 Hz de polling.",
+      "specs": {
+        "Formato": "60 % (66 teclas)",
+        "Switches": "Magnéticos lineales, hot-swap",
+        "Actuación": "0,1 a 3,4 mm, por tecla",
+        "Rapid trigger": "Sí",
+        "Polling rate": "8000 Hz",
+        "Conectividad": "Cable USB-C",
+        "Teclas": "PBT doble inyección, leyenda lateral",
+        "Iluminación": "RGB"
+      },
+      "nota_honesta": "Es solo de cable. Se configura desde un driver web, no hay programa para instalar.",
+      "fotos": [
+        "img/x68he-1.jpg",
+        "img/x68he-2.jpg",
+        "img/x68he-3.jpg",
+        "img/x68he-4.jpg"
+      ],
+      "placeholder": "0,1 mm",
+      "tiene_fotos": true,
+      "precio": 145000,
+      "precio_regular": null
+    },
+    {
+      "id": "vxe-v3-pro",
+      "nombre": "VXE V3 PRO",
+      "marca": "VXE",
+      "categoria": "mouses",
+      "destacado": false,
+      "colores": [
+        "Lavanda"
+      ],
+      "gancho": "49 gramos, tres modos de conexión.",
+      "descripcion": "Pesa 49 gramos y monta el PixArt PAW3395 SE. Se conecta por 2.4 GHz, Bluetooth o cable.",
+      "specs": {
+        "Peso": "49 g",
+        "Sensor": "PixArt PAW3395 SE",
+        "DPI": "18 000",
+        "Polling rate": "1000 Hz",
+        "Conectividad": "2.4 GHz / Bluetooth / USB-C",
+        "Switches": "Huano (80 M clics)",
+        "Medidas": "116,6 × 62,2 × 38,2 mm"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/v3pro-1.jpg",
+        "img/v3pro-2.jpg",
+        "img/v3pro-3.jpg",
+        "img/v3pro-4.jpg"
+      ],
+      "placeholder": "49 g",
+      "tiene_fotos": true,
+      "precio": 85000,
+      "precio_regular": null
+    },
+    {
+      "id": "kz-edx-pro",
+      "nombre": "KZ EDX Pro",
+      "marca": "KZ",
+      "categoria": "audio",
+      "destacado": false,
+      "colores": [
+        "Cristal",
+        "Negro"
+      ],
+      "gancho": "In-ear con driver de 10 mm.",
+      "descripcion": "Audífonos in-ear con driver dinámico de 10 mm y doble imán. Conector de 3,5 mm.",
+      "specs": {
+        "Tipo": "In-ear",
+        "Driver": "Dinámico de 10 mm, doble imán",
+        "Impedancia": "24 Ω",
+        "Sensibilidad": "112 dB",
+        "Respuesta": "10 Hz – 20 kHz",
+        "Conector": "3,5 mm",
+        "Cable": "1,25 m",
+        "Micrófono": null
+      },
+      "nota_honesta": null,
+      "fotos": [],
+      "placeholder": "10 mm",
+      "tiene_fotos": false,
+      "precio": 39000,
+      "precio_regular": null
+    },
+    {
+      "id": "as-cm02",
+      "nombre": "Mousepad Attack Shark CM02",
+      "marca": "Attack Shark",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "45 × 40 cm, bordes cosidos.",
+      "descripcion": "Tela de fibra densa con recubrimiento que repele el agua, base de caucho natural y bordes cosidos.",
+      "specs": {
+        "Tamaño": "45 × 40 cm",
+        "Grosor": "4 mm",
+        "Superficie": "Tela de fibra densa",
+        "Base": "Caucho natural antideslizante",
+        "Bordes": "Cosidos"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/cm02-1.jpg",
+        "img/cm02-2.jpg",
+        "img/cm02-3.jpg"
+      ],
+      "placeholder": "45×40",
+      "tiene_fotos": true,
+      "precio": 42000,
+      "precio_regular": null
+    },
+    {
+      "id": "as-cm02se",
+      "nombre": "Mousepad Attack Shark CM02SE",
+      "marca": "Attack Shark",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Negro"
+      ],
+      "gancho": "Pad de control, frena donde apuntas.",
+      "descripcion": "Superficie de control: el mouse se desliza con algo de freno, para apuntar con precisión. Tela con textura, recubrimiento que repele el agua y bordes cosidos.",
+      "specs": {
+        "Tamaño": null,
+        "Grosor": "4 mm",
+        "Superficie": "Tela con textura (control)",
+        "Bordes": "Cosidos"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/cm02se-1.jpg",
+        "img/cm02se-2.jpg",
+        "img/cm02se-3.jpg"
+      ],
+      "placeholder": "Control",
+      "tiene_fotos": true,
+      "precio": 35000,
+      "precio_regular": null
+    },
+    {
+      "id": "pad-ojo-morado",
+      "nombre": "Mousepad ojo morado 45 × 40",
+      "marca": "Genérico",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Ojo morado"
+      ],
+      "gancho": "45 × 40 cm.",
+      "descripcion": null,
+      "specs": {
+        "Tamaño": "45 × 40 cm"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/pad-ojo-1.jpg"
+      ],
+      "placeholder": "45×40",
+      "tiene_fotos": true,
+      "precio": 39000,
+      "precio_regular": null
+    },
+    {
+      "id": "pad-anime-45",
+      "nombre": "Mousepad anime 45 × 40",
+      "marca": "Genérico",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Anime"
+      ],
+      "gancho": "45 × 40 cm.",
+      "descripcion": null,
+      "specs": {
+        "Tamaño": "45 × 40 cm"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/pad-anime-1.jpg"
+      ],
+      "placeholder": "45×40",
+      "tiene_fotos": true,
+      "precio": 29000,
       "precio_regular": null
     }
   ]
