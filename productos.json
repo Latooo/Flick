@@ -696,12 +696,12 @@
     },
     {
       "id": "as-cm02se-rosa",
-      "nombre": "Attack Shark CM02SE Rosa",
+      "nombre": "Mousepad Attack Shark CM02SE Rosa",
       "marca": "Attack Shark",
       "categoria": "superficies",
       "destacado": false,
       "colores": [
-        "Rosa topográfico"
+        "Fucsia topográfico"
       ],
       "gancho": "Pad de control, frena donde apuntas.",
       "descripcion": "Superficie de control: el mouse se desliza con algo de freno, para apuntar con precisión. Tela con textura, recubrimiento que repele el agua y bordes cosidos.",
@@ -734,7 +734,7 @@
       "descripcion": "Mousepad de microfibra con diseño de ojo morado.",
       "specs": {
         "Tamaño": "45 × 40 cm",
-        "Material": "Microfibra"
+        "Superficie": "Microfibra"
       },
       "nota_honesta": null,
       "fotos": [
