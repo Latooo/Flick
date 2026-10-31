@@ -606,6 +606,38 @@
       "precio_regular": null
     },
     {
+      "id": "kz-edx-pro",
+      "nombre": "KZ EDX Pro",
+      "marca": "KZ",
+      "categoria": "audio",
+      "destacado": false,
+      "colores": [
+        "Cristal",
+        "Negro"
+      ],
+      "gancho": "In-ear con driver de 10 mm.",
+      "descripcion": "Audífonos in-ear con driver dinámico de 10 mm y doble imán. Conector de 3,5 mm.",
+      "specs": {
+        "Driver": "Dinámico de 10 mm, doble imán",
+        "Impedancia": "24 Ω",
+        "Sensibilidad": "112 dB",
+        "Respuesta de frecuencia": "10 Hz – 20 kHz",
+        "Conector": "3,5 mm",
+        "Cable": "Desmontable, 2 pines 0,75 mm, 1,25 m",
+        "Micrófono": "Sí"
+      },
+      "nota_honesta": "Imagen de referencia. El diseño real puede variar.",
+      "fotos": [
+        "img/kz-1.jpg",
+        "img/kz-2.jpg",
+        "img/kz-3.jpg"
+      ],
+      "placeholder": "10 mm",
+      "tiene_fotos": true,
+      "precio": 39000,
+      "precio_regular": null
+    },
+    {
       "id": "as-cm02",
       "nombre": "Mousepad Attack Shark CM02",
       "marca": "Attack Shark",
@@ -663,6 +695,33 @@
       "precio_regular": null
     },
     {
+      "id": "as-cm02se-rosa",
+      "nombre": "Attack Shark CM02SE Rosa",
+      "marca": "Attack Shark",
+      "categoria": "superficies",
+      "destacado": false,
+      "colores": [
+        "Rosa topográfico"
+      ],
+      "gancho": "Pad de control, frena donde apuntas.",
+      "descripcion": "Superficie de control: el mouse se desliza con algo de freno, para apuntar con precisión. Tela con textura, recubrimiento que repele el agua y bordes cosidos.",
+      "specs": {
+        "Tamaño": null,
+        "Grosor": "4 mm",
+        "Superficie": "Tela con textura (control)",
+        "Bordes": "Cosidos"
+      },
+      "nota_honesta": null,
+      "fotos": [
+        "img/cm02se-rosa-1.jpg",
+        "img/cm02se-rosa-2.jpg"
+      ],
+      "placeholder": "Control",
+      "tiene_fotos": true,
+      "precio": 55000,
+      "precio_regular": null
+    },
+    {
       "id": "pad-ojo-morado",
       "nombre": "Mousepad ojo morado 45 × 40",
       "marca": "Genérico",
@@ -672,9 +731,10 @@
         "Ojo morado"
       ],
       "gancho": "45 × 40 cm.",
-      "descripcion": null,
+      "descripcion": "Mousepad de microfibra con diseño de ojo morado.",
       "specs": {
-        "Tamaño": "45 × 40 cm"
+        "Tamaño": "45 × 40 cm",
+        "Material": "Microfibra"
       },
       "nota_honesta": null,
       "fotos": [
