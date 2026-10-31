@@ -663,7 +663,7 @@
       ],
       "placeholder": "45×40",
       "tiene_fotos": true,
-      "precio": 42000,
+      "precio": 69900,
       "precio_regular": null
     },
     {
@@ -673,12 +673,12 @@
       "categoria": "superficies",
       "destacado": false,
       "colores": [
-        "Negro"
+        "Negro topográfico"
       ],
-      "gancho": "Pad de control, frena donde apuntas.",
+      "gancho": "41 × 31 cm, pad de control.",
       "descripcion": "Superficie de control: el mouse se desliza con algo de freno, para apuntar con precisión. Tela con textura, recubrimiento que repele el agua y bordes cosidos.",
       "specs": {
-        "Tamaño": null,
+        "Tamaño": "41 × 31 cm",
         "Grosor": "4 mm",
         "Superficie": "Tela con textura (control)",
         "Bordes": "Cosidos"
@@ -691,7 +691,7 @@
       ],
       "placeholder": "Control",
       "tiene_fotos": true,
-      "precio": 35000,
+      "precio": 50000,
       "precio_regular": null
     },
     {
@@ -703,10 +703,10 @@
       "colores": [
         "Fucsia topográfico"
       ],
-      "gancho": "Pad de control, frena donde apuntas.",
+      "gancho": "41 × 31 cm, pad de control.",
       "descripcion": "Superficie de control: el mouse se desliza con algo de freno, para apuntar con precisión. Tela con textura, recubrimiento que repele el agua y bordes cosidos.",
       "specs": {
-        "Tamaño": null,
+        "Tamaño": "41 × 31 cm",
         "Grosor": "4 mm",
         "Superficie": "Tela con textura (control)",
         "Bordes": "Cosidos"
@@ -718,7 +718,7 @@
       ],
       "placeholder": "Control",
       "tiene_fotos": true,
-      "precio": 55000,
+      "precio": 50000,
       "precio_regular": null
     },
     {
@@ -743,7 +743,7 @@
       ],
       "placeholder": "45×40",
       "tiene_fotos": true,
-      "precio": 39000,
+      "precio": 50000,
       "precio_regular": null
     }
   ]
