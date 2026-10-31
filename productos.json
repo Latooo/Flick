@@ -396,7 +396,10 @@
         "img/aj139-1.jpg",
         "img/aj139-2.jpg",
         "img/aj139-3.jpg",
-        "img/aj139-4.jpg"
+        "img/aj139-4.jpg",
+        "img/aj139-5.jpg",
+        "img/aj139-6.jpg",
+        "img/aj139-7.jpg"
       ],
       "placeholder": "66 g",
       "tiene_fotos": true,
@@ -555,7 +558,7 @@
         "Rapid trigger": "Sí",
         "Polling rate": "8000 Hz",
         "Conectividad": "Cable USB-C",
-        "Teclas": "PBT doble inyección, leyenda lateral",
+        "Teclas": "PBT doble inyección",
         "Iluminación": "RGB"
       },
       "nota_honesta": "Es solo de cable. Se configura desde un driver web, no hay programa para instalar.",
@@ -600,35 +603,6 @@
       "placeholder": "49 g",
       "tiene_fotos": true,
       "precio": 85000,
-      "precio_regular": null
-    },
-    {
-      "id": "kz-edx-pro",
-      "nombre": "KZ EDX Pro",
-      "marca": "KZ",
-      "categoria": "audio",
-      "destacado": false,
-      "colores": [
-        "Cristal",
-        "Negro"
-      ],
-      "gancho": "In-ear con driver de 10 mm.",
-      "descripcion": "Audífonos in-ear con driver dinámico de 10 mm y doble imán. Conector de 3,5 mm.",
-      "specs": {
-        "Tipo": "In-ear",
-        "Driver": "Dinámico de 10 mm, doble imán",
-        "Impedancia": "24 Ω",
-        "Sensibilidad": "112 dB",
-        "Respuesta": "10 Hz – 20 kHz",
-        "Conector": "3,5 mm",
-        "Cable": "1,25 m",
-        "Micrófono": null
-      },
-      "nota_honesta": null,
-      "fotos": [],
-      "placeholder": "10 mm",
-      "tiene_fotos": false,
-      "precio": 39000,
       "precio_regular": null
     },
     {
@@ -704,34 +678,12 @@
       },
       "nota_honesta": null,
       "fotos": [
-        "img/pad-ojo-1.jpg"
+        "img/pad-ojo-1.jpg",
+        "img/pad-ojo-2.jpg"
       ],
       "placeholder": "45×40",
       "tiene_fotos": true,
       "precio": 39000,
-      "precio_regular": null
-    },
-    {
-      "id": "pad-anime-45",
-      "nombre": "Mousepad anime 45 × 40",
-      "marca": "Genérico",
-      "categoria": "superficies",
-      "destacado": false,
-      "colores": [
-        "Anime"
-      ],
-      "gancho": "45 × 40 cm.",
-      "descripcion": null,
-      "specs": {
-        "Tamaño": "45 × 40 cm"
-      },
-      "nota_honesta": null,
-      "fotos": [
-        "img/pad-anime-1.jpg"
-      ],
-      "placeholder": "45×40",
-      "tiene_fotos": true,
-      "precio": 29000,
       "precio_regular": null
     }
   ]
