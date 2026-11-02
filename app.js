@@ -37,6 +37,11 @@ const MARQUEE = {
   speedPxPerSec: 53,   // matches the pace of the old fixed 25s/2-copy loop at its original content width
 };
 
+const SUPABASE_URL = 'https://nisegpuyvfujzrcjlhtw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ULilyHHntqtHTcrihvy_Pw_8ylQBEC_';  // public (publishable) key
+const SUPABASE_TIMEOUT_MS = 4000;  // under INTRO.hardCapMs so the intro never waits longer than this
+const SUPABASE_FIELDS = 'id,nombre,marca,categoria,destacado,agotado,colores,gancho,descripcion,specs,nota_honesta,fotos,tiene_fotos,placeholder,precio,precio_regular';
+
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -53,10 +58,40 @@ let DATA = null;
 let activeCat = 'todos';
 
 /* ---------- data ---------- */
+// productos.json supplies sitio + categorias and is the fallback for productos;
+// Supabase supplies productos when it answers in time with a usable array.
 async function loadData() {
-  const res = await fetch('productos.json');
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const [data, remote] = await Promise.all([
+    fetch('productos.json').then((res) => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }),
+    loadRemoteProductos().catch((err) => {
+      console.warn('Supabase no disponible, usando productos.json:', err.message);
+      return null;
+    })
+  ]);
+  if (remote) data.productos = remote;
+  return data;
+}
+
+async function loadRemoteProductos() {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), SUPABASE_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=${SUPABASE_FIELDS}&order=orden`, {
+      headers: { apikey: SUPABASE_KEY },
+      signal: ctrl.signal
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) throw new Error('respuesta vacia o inesperada');
+    return rows;
+  } catch (err) {
+    throw ctrl.signal.aborted ? new Error('timeout de ' + SUPABASE_TIMEOUT_MS + ' ms') : err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 const byId = (id) => DATA.productos.find((p) => p.id === id);
