@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Flick · Panel</title>
+  <link rel="icon" href="../img/marca/flick-simbolo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://nisegpuyvfujzrcjlhtw.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main id="loginView" class="login" hidden>
+    <form id="loginForm" class="login-card" novalidate>
+      <h1 class="display">Flick · Panel</h1>
+      <p class="muted">Acceso solo para administradores.</p>
+      <label class="field"><span>Correo</span>
+        <input id="loginEmail" type="email" autocomplete="username" required>
+      </label>
+      <label class="field"><span>Contraseña</span>
+        <input id="loginPass" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="loginError" class="error" role="alert" hidden></p>
+      <button id="loginBtn" class="btn btn-primary" type="submit">Entrar</button>
+    </form>
+  </main>
+
+  <div id="appView" hidden>
+    <header class="topbar">
+      <h1 class="display">Flick · Panel</h1>
+      <div class="topbar-actions">
+        <span id="whoami" class="muted small"></span>
+        <button id="logoutBtn" class="btn" type="button">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <section id="listView" class="wrap">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Buscar por nombre o marca" aria-label="Buscar por nombre o marca">
+        <select id="catFilter" aria-label="Filtrar por categoría"></select>
+        <button id="newBtn" class="btn btn-primary" type="button">+ Nuevo producto</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="activos" aria-selected="true" type="button">Activos <span id="countActivos"></span></button>
+        <button class="tab" role="tab" data-tab="archivados" aria-selected="false" type="button">Archivados <span id="countArchivados"></span></button>
+      </div>
+      <ul id="rows" class="rows"></ul>
+      <p id="emptyMsg" class="muted" hidden>No hay productos que coincidan.</p>
+    </section>
+
+    <section id="formView" class="wrap" hidden>
+      <form id="productForm" class="form" novalidate>
+        <div class="form-head">
+          <button id="backBtn" class="btn" type="button">← Volver</button>
+          <h2 id="formTitle" class="display"></h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-main">
+            <fieldset>
+              <legend>Datos</legend>
+              <label class="field"><span>Nombre</span><input id="fNombre" required></label>
+              <label class="field"><span>ID <em class="muted small" id="idHint"></em></span>
+                <input id="fId" required pattern="[a-z0-9-]+" autocapitalize="none" spellcheck="false"></label>
+              <div class="two">
+                <label class="field"><span>Marca</span><input id="fMarca" required></label>
+                <label class="field"><span>Categoría</span><select id="fCategoria" required></select></label>
+              </div>
+              <label class="field"><span>Gancho (frase corta)</span><input id="fGancho" required></label>
+              <label class="field"><span>Descripción</span><textarea id="fDescripcion" rows="4" required></textarea></label>
+              <label class="field"><span>Placeholder (texto grande bajo la foto, ej. "49 g")</span><input id="fPlaceholder" required></label>
+              <label class="field"><span>Nota honesta (opcional)</span><textarea id="fNota" rows="2"></textarea></label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Precio</legend>
+              <div class="two">
+                <label class="field"><span>Precio (COP)</span><input id="fPrecio" inputmode="numeric" placeholder="vacío = sin precio"></label>
+                <label class="field"><span>Precio regular (COP)</span><input id="fPrecioReg" inputmode="numeric" placeholder="vacío = sin promo"></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Estado</legend>
+              <label class="switch"><input id="fDestacado" type="checkbox"><span class="track"></span><span>Destacado</span></label>
+              <label class="switch"><input id="fAgotado" type="checkbox"><span class="track"></span><span>Agotado</span></label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Colores</legend>
+              <div id="chips" class="chips"></div>
+              <div class="inline">
+                <input id="chipInput" placeholder="Agregar color y Enter" aria-label="Nuevo color">
+                <button id="chipAdd" class="btn" type="button">Agregar</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Especificaciones</legend>
+              <div id="specs" class="specs"></div>
+              <button id="specAdd" class="btn" type="button">+ Agregar fila</button>
+            </fieldset>
+          </div>
+
+          <div class="form-side">
+            <fieldset>
+              <legend>Fotos <span class="muted small">(la primera es la de la tarjeta)</span></legend>
+              <ul id="photos" class="photos"></ul>
+              <label class="btn file-btn">+ Subir foto
+                <input id="photoInput" type="file" accept="image/*" hidden>
+              </label>
+              <p id="photoMsg" class="error" role="alert" hidden></p>
+            </fieldset>
+            <fieldset>
+              <legend>Vista previa de la tarjeta</legend>
+              <div id="preview" class="preview"></div>
+            </fieldset>
+          </div>
+        </div>
+
+        <p id="formError" class="error" role="alert" hidden></p>
+        <div class="form-actions">
+          <button id="saveBtn" class="btn btn-primary" type="submit">Guardar</button>
+          <button id="cancelBtn" class="btn" type="button">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <dialog id="cropDialog" class="dialog">
+    <h2 class="display">Recortar foto</h2>
+    <p class="muted small">Arrastrá para mover y usá el control para acercar. Salida: 1600×1600.</p>
+    <canvas id="cropCanvas" class="crop-canvas"></canvas>
+    <input id="cropZoom" type="range" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
+    <div class="form-actions">
+      <button id="cropOk" class="btn btn-primary" type="button">Usar foto</button>
+      <button id="cropCancel" class="btn" type="button">Cancelar</button>
+    </div>
+  </dialog>
+
+  <dialog id="deleteDialog" class="dialog">
+    <h2 class="display">Eliminar definitivamente</h2>
+    <p>Se borra la fila y sus fotos de Storage. No se puede deshacer.</p>
+    <p>Escribí el id <strong id="deleteId" class="mono"></strong> para confirmar.</p>
+    <input id="deleteInput" autocomplete="off" aria-label="Escribí el id para confirmar">
+    <p id="deleteError" class="error" role="alert" hidden></p>
+    <div class="form-actions">
+      <button id="deleteOk" class="btn btn-danger" type="button" disabled>Eliminar</button>
+      <button id="deleteCancel" class="btn" type="button">Cancelar</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
+          integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK"
+          crossorigin="anonymous"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
