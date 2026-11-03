@@ -40,7 +40,6 @@
 
   /* hero video overlay: tune here only */
   --hero-scrim: rgba(10,10,10,.62);
-  --hero-saturate: .75;
   --hero-scrim-left: rgba(10,10,10,.45);   /* extra darkening on the text side only */
 
   /* header logo FLICK<->FLK transition timing: kept in sync with LOGO in app.js,
@@ -271,11 +270,11 @@ img, svg { display: block; max-width: 100%; }
 /* full-bleed background: .hero is a direct child of <main>, so it already spans the window; media fills it */
 .hero-media { position: absolute; inset: 0; z-index: -1; background: var(--bg); }
 .hero-poster, .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; }
-.hero-poster {
-  background: url("media/hero-poster.jpg") center / cover no-repeat;
-  filter: saturate(var(--hero-saturate));
-}
-.hero-video { object-fit: cover; filter: saturate(var(--hero-saturate)); }
+/* The desaturation (75%) is baked into the video and poster files themselves.
+   Never put a CSS filter on .hero-video: it forces the browser to re-filter every
+   video frame and made the crosshair stutter over the hero. */
+.hero-poster { background: url("media/hero-poster.jpg?v=2") center / cover no-repeat; }
+.hero-video { object-fit: cover; }
 /* colour veil + vertical fade into the page background (no hard line at the bottom) */
 .hero-scrim {
   position: absolute; inset: 0;

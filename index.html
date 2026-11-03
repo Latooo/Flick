@@ -87,11 +87,11 @@
                Small screens get the light 720p pair, large screens the 1440p pair: the browser
                takes the first <source> whose media query matches and downloads only that one. -->
           <template id="heroVideoTpl">
-            <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="media/hero-poster.jpg">
-              <source src="media/hero-mobile.webm" type="video/webm" media="(max-width: 767px)">
-              <source src="media/hero-mobile.mp4" type="video/mp4" media="(max-width: 767px)">
-              <source src="media/hero.webm" type="video/webm" media="(min-width: 768px)">
-              <source src="media/hero.mp4" type="video/mp4" media="(min-width: 768px)">
+            <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="media/hero-poster.jpg?v=2">
+              <source src="media/hero-mobile.webm?v=2" type="video/webm" media="(max-width: 767px)">
+              <source src="media/hero-mobile.mp4?v=2" type="video/mp4" media="(max-width: 767px)">
+              <source src="media/hero.webm?v=2" type="video/webm" media="(min-width: 768px)">
+              <source src="media/hero.mp4?v=2" type="video/mp4" media="(min-width: 768px)">
             </video>
           </template>
           <script>
