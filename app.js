@@ -386,10 +386,12 @@ function renderFilters() {
 }
 
 function renderGrid() {
-  // stable sort: agotados move to the end, everyone else keeps their relative order
+  // stable sort: agotados move to the end, everyone else keeps their relative order.
+  // In "Todos", available destacados go first (a sold-out destacado still goes to the end).
+  const rank = (p) => (p.agotado ? 2 : activeCat === 'todos' && p.destacado ? 0 : 1);
   const list = DATA.productos
     .filter((p) => activeCat === 'todos' || p.categoria === activeCat)
-    .sort((a, b) => (a.agotado ? 1 : 0) - (b.agotado ? 1 : 0));
+    .sort((a, b) => rank(a) - rank(b));
   const grid = $('#grid');
   grid.innerHTML = list
     .map((p) => `
