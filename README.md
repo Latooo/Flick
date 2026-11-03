@@ -43,7 +43,9 @@ Sitio estático: HTML, CSS y JS sin build. Los productos se leen de Supabase (ve
 | `styles.css` | Estilos |
 | `app.js` | Carga los productos (Supabase, con respaldo a `productos.json`) y arma el catálogo |
 | `productos.json` | Datos de la tienda y categorías; respaldo de los productos |
-| `img/` | Fotos de producto |
+| `img/` | Fotos de producto (1600 × 1600) |
+| `img/thumb/` | Miniaturas WebP de las fotos (640 px para las tarjetas, 200 px para tiras y panel) |
+| `_headers` | Caché del navegador en Netlify para `img/` y `media/` |
 | `media/` | Video de portada |
 | `admin/` | Panel de administrador (`/admin/`) |
 | `supabase/` | SQL de la base de datos |
@@ -62,6 +64,7 @@ Sitio estático: HTML, CSS y JS sin build. Los productos se leen de Supabase (ve
   insert into public.admins (user_id) select id from auth.users where email = 'correo@ejemplo.com';
   ```
 
+- **Fotos subidas desde el panel:** se guardan en Storage en 1600 × 1600 y el panel sube también dos miniaturas (`…-640.jpg` y `…-200.jpg`). Si falta una miniatura, el sitio usa la foto grande.
 - **Claves:** el repo solo lleva la clave pública (`sb_publishable_…`). La clave secreta o `service_role` nunca va al repo ni al navegador.
 
 ### `supabase/`
@@ -78,6 +81,7 @@ Sitio estático: HTML, CSS y JS sin build. Los productos se leen de Supabase (ve
 |---|---|
 | `json_a_seed.py` | Genera `supabase/seed.sql` a partir de `productos.json`. |
 | `verificar_supabase.py` | Compara la tabla con `productos.json` y comprueba que la clave pública no pueda escribir. |
+| `miniaturas.py` | Genera las miniaturas de `img/*.jpg` en `img/thumb/`. Correrlo cada vez que se agregue o cambie una foto en `img/` (necesita Pillow). |
 | `e2e_panel.py` | Prueba de punta a punta del panel con una cuenta admin (credenciales en variables de entorno `FLICK_TEST_EMAIL` y `FLICK_TEST_PASSWORD`). |
 
 ### Keep-alive

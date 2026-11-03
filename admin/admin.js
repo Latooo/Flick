@@ -6,6 +6,8 @@ const BUCKET = 'productos';
 const STORAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
 const MAX_BYTES = 2 * 1024 * 1024;
 const OUT_SIZE = 1600;
+// Lightweight copies uploaded next to every photo; the public site reads them (see thumbSrc in app.js).
+const THUMB_SIZES = [640, 200];
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -26,9 +28,38 @@ function h(tag, props = {}, ...kids) {
   return el;
 }
 
+const SVGNS = 'http://www.w3.org/2000/svg';
+function icon(name) {
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('class', 'ic');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(SVGNS, 'use');
+  use.setAttribute('href', '#i-' + name);
+  svg.append(use);
+  return svg;
+}
+const iconBtn = (name, label, onclick, { disabled = false, danger = false } = {}) =>
+  h('button', { class: 'icon-btn' + (danger ? ' danger' : ''), type: 'button', 'aria-label': label, title: label, disabled, onclick }, icon(name));
+
 const money = (n) => '$' + new Intl.NumberFormat('es-CO').format(n);
 const photoSrc = (u) => (/^https?:/i.test(u) ? u : '../' + u);   // legacy "img/..." paths live at the site root
 const storagePath = (u) => (typeof u === 'string' && u.startsWith(STORAGE_PREFIX) ? decodeURIComponent(u.slice(STORAGE_PREFIX.length)) : null);
+const variantPaths = (path) => THUMB_SIZES.map((s) => path.replace(/\.jpg$/i, `-${s}.jpg`));
+
+// Same naming as thumbSrc() in app.js; falls back to the full photo if the thumbnail is missing.
+function thumbSrc(u, size) {
+  if (typeof u !== 'string') return u;
+  const local = /^img\/([^/]+)\.jpe?g$/i.exec(u);
+  if (local) return `../img/thumb/${local[1]}-${size}.webp`;
+  if (u.startsWith(STORAGE_PREFIX) && /\.jpg$/i.test(u)) return u.replace(/\.jpg$/i, `-${size}.jpg`);
+  return photoSrc(u);
+}
+function thumbImg(u, size, alt = '') {
+  const full = photoSrc(u);
+  const img = h('img', { src: thumbSrc(u, size), alt, loading: 'lazy', decoding: 'async' });
+  img.addEventListener('error', () => { if (img.src !== new URL(full, location.href).href) img.src = full; }, { once: true });
+  return img;
+}
 
 let toastTimer;
 function toast(msg, kind = 'ok') {
@@ -37,17 +68,26 @@ function toast(msg, kind = 'ok') {
   t.className = 'toast ' + kind;
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, kind === 'err' ? 6000 : 2200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, kind === 'err' ? 6000 : 2400);
+}
+
+function busy(btn, on) {
+  btn.disabled = on;
+  btn.classList.toggle('is-busy', on);
+  btn.setAttribute('aria-busy', String(on));
 }
 
 const state = {
   categorias: [],
   productos: [],
+  loaded: false,
   tab: 'activos',
   q: '',
   cat: 'todos',
+  sorting: false,
   editing: null,       // product being edited, or null when creating
-  form: null           // working copy while the form is open
+  form: null,          // working copy while the form is open
+  snapshot: ''         // serialized form at open, to detect unsaved changes
 };
 
 /* ---------- auth ---------- */
@@ -86,7 +126,7 @@ $('#loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError('');
   const btn = $('#loginBtn');
-  btn.disabled = true;
+  busy(btn, true);
   try {
     const { data, error } = await sb.auth.signInWithPassword({
       email: $('#loginEmail').value.trim(),
@@ -97,14 +137,17 @@ $('#loginForm').addEventListener('submit', async (e) => {
   } catch (err) {
     loginError('No se pudo iniciar sesión: ' + err.message);
   } finally {
-    btn.disabled = false;
+    busy(btn, false);
     $('#loginPass').value = '';
   }
 });
 
 $('#logoutBtn').addEventListener('click', async () => {
+  if (state.form && isDirty() && !confirm('Tenés cambios sin guardar. ¿Salir igual?')) return;
   await sb.auth.signOut();
   state.productos = [];
+  state.loaded = false;
+  if (state.form) closeForm(true);
   show('login');
 });
 
@@ -115,10 +158,9 @@ async function bootApp() {
       const res = await fetch('../productos.json');
       state.categorias = (await res.json()).categorias || [];
     } catch (err) { toast('No se pudieron cargar las categorías: ' + err.message, 'err'); }
-    const opts = [h('option', { value: 'todos', text: 'Todas las categorías' }), ...state.categorias.map((c) => h('option', { value: c.id, text: c.nombre }))];
-    $('#catFilter').replaceChildren(...opts);
     $('#fCategoria').replaceChildren(...state.categorias.map((c) => h('option', { value: c.id, text: c.nombre })));
   }
+  renderList();          // skeleton while loading
   await loadProductos();
 }
 
@@ -126,6 +168,7 @@ async function loadProductos() {
   const { data, error } = await sb.from('productos').select('*').order('orden');
   if (error) { toast('No se pudieron cargar los productos: ' + error.message, 'err'); return; }
   state.productos = data;
+  state.loaded = true;
   renderList();
 }
 
@@ -137,58 +180,109 @@ async function patch(id, fields) {
 }
 
 /* ---------- list ---------- */
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 const catName = (id) => (state.categorias.find((c) => c.id === id) || {}).nombre || id;
+
+const inTab = (p, tab) => tab === 'activos' ? p.activo : tab === 'agotados' ? p.activo && p.agotado : !p.activo;
 
 function visible() {
   const q = state.q.trim().toLowerCase();
   return state.productos.filter((p) =>
-    (state.tab === 'activos' ? p.activo : !p.activo) &&
+    inTab(p, state.tab) &&
     (state.cat === 'todos' || p.categoria === state.cat) &&
     (!q || p.nombre.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q)));
 }
 
-function statusPill(p) {
-  if (!p.activo) return h('span', { class: 'pill pill-arch', text: 'Archivado' });
-  return p.agotado ? h('span', { class: 'pill pill-out', text: 'Agotado' }) : h('span', { class: 'pill pill-ok', text: 'Disponible' });
+function renderCats() {
+  const base = state.productos.filter((p) => inTab(p, state.tab));
+  const opts = [{ id: 'todos', nombre: 'Todas' }, ...state.categorias];
+  $('#catChips').replaceChildren(...opts.map((c) => {
+    const n = c.id === 'todos' ? base.length : base.filter((p) => p.categoria === c.id).length;
+    return h('button', {
+      class: 'cat tnum', type: 'button', 'aria-pressed': String(state.cat === c.id),
+      text: state.loaded ? `${c.nombre} ${n}` : c.nombre,
+      onclick: () => { state.cat = c.id; renderList(); }
+    });
+  }));
+}
+
+function skeletonRows() {
+  return Array.from({ length: 6 }, () => h('li', { class: 'row skel', 'aria-hidden': 'true' },
+    h('div', { class: 'row-main' }, h('div', { class: 'row-thumb' }),
+      h('div', { class: 'row-info', style: 'flex:1' }, h('span', { class: 'skel-line', style: 'width:45%' }), h('span', { class: 'skel-line', style: 'width:28%;margin-top:8px' })))));
 }
 
 function renderList() {
-  $('#countActivos').textContent = `(${state.productos.filter((p) => p.activo).length})`;
-  $('#countArchivados').textContent = `(${state.productos.filter((p) => !p.activo).length})`;
+  const all = state.productos;
+  const activos = all.filter((p) => p.activo), agotados = activos.filter((p) => p.agotado);
+  $('#countActivos').textContent = state.loaded ? activos.length : '';
+  $('#countAgotados').textContent = state.loaded ? agotados.length : '';
+  $('#countArchivados').textContent = state.loaded ? all.length - activos.length : '';
+  $('#summary').textContent = state.loaded
+    ? [plural(activos.length - agotados.length, 'disponible'), plural(agotados.length, 'agotado'), plural(all.length - activos.length, 'archivado')].join(' · ')
+    : 'Cargando…';
+  renderCats();
+
+  // reordering only makes sense on the full active list
+  const canSort = state.tab === 'activos' && state.cat === 'todos' && !state.q.trim();
+  if (state.sorting && !canSort) setSorting(false, false);
+  $('#sortBtn').hidden = state.tab !== 'activos';
+  $('#sortHint').hidden = !state.sorting;
+
+  if (!state.loaded) { $('#rows').replaceChildren(...skeletonRows()); $('#emptyMsg').hidden = true; return; }
+
   const list = visible();
+  const filtered = state.q.trim() || state.cat !== 'todos';
   $('#emptyMsg').hidden = list.length > 0;
+  $('#clearFilters').hidden = !filtered;
+  $('#emptyText').textContent = filtered
+    ? 'Ningún producto coincide con la búsqueda o el filtro.'
+    : state.tab === 'agotados' ? 'No hay productos agotados.'
+    : state.tab === 'archivados' ? 'No hay productos archivados. Al archivar uno, sale de la web y aparece acá.'
+    : 'Todavía no hay productos. Creá el primero con “Nuevo producto”.';
   $('#rows').replaceChildren(...list.map((p, i) => rowEl(p, i, list)));
 }
 
 function rowEl(p, i, list) {
-  const thumb = p.fotos && p.fotos[0]
-    ? h('img', { class: 'thumb', src: photoSrc(p.fotos[0]), alt: '', loading: 'lazy' })
-    : h('div', { class: 'thumb' });
-  const price = p.precio ? money(p.precio) : 'Sin precio';
-  const sw = h('input', { type: 'checkbox', checked: !!p.agotado, 'aria-label': 'Agotado: ' + p.nombre });
-  const row = h('li', { class: 'row', 'data-id': p.id },
+  const first = p.fotos && p.fotos[0];
+  const thumb = h('div', { class: 'row-thumb' }, first ? thumbImg(first, 200) : h('span', { class: 'ph-txt', text: p.placeholder || '' }));
+  const meta = [catName(p.categoria), p.precio ? money(p.precio) : 'Sin precio'];
+  const main = h('button', { class: 'row-main', type: 'button', 'aria-label': 'Editar ' + p.nombre, onclick: () => openForm(p) },
     thumb,
-    h('div', { class: 'row-info' },
-      h('div', { class: 'row-name', text: p.nombre }),
-      h('div', { class: 'row-meta' }, h('span', { text: catName(p.categoria) }), h('span', { text: price }), statusPill(p))),
-    h('button', { class: 'btn btn-sm', type: 'button', text: 'Editar', onclick: () => openForm(p) }),
-    h('div', { class: 'row-actions' },
-      p.activo ? h('label', { class: 'switch' }, sw, h('span', { class: 'track' }), h('span', { text: 'Agotado' })) : null,
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↑', 'aria-label': 'Subir', disabled: i === 0, onclick: () => move(list, i, -1) }),
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↓', 'aria-label': 'Bajar', disabled: i === list.length - 1, onclick: () => move(list, i, 1) }),
-      h('span', { class: 'spacer' }),
-      p.activo
-        ? h('button', { class: 'btn btn-sm', type: 'button', text: 'Archivar', onclick: () => setActivo(p, false) })
-        : [h('button', { class: 'btn btn-sm', type: 'button', text: 'Restaurar', onclick: () => setActivo(p, true) }),
-           h('button', { class: 'btn btn-sm btn-danger', type: 'button', text: 'Eliminar', onclick: () => openDelete(p) })]));
-  sw.addEventListener('change', () => toggleAgotado(p, sw, row));
+    h('span', { class: 'row-info' },
+      h('span', { class: 'row-name', text: p.nombre }),
+      h('span', { class: 'row-meta tnum' },
+        p.activo && p.agotado ? [h('span', { class: 'row-state', text: 'Agotado' }), h('span', { class: 'row-state sep', 'aria-hidden': 'true', text: '·' })] : null,
+        meta[0], h('span', { class: 'sep', 'aria-hidden': 'true', text: '·' }), meta[1])));
+
+  let side;
+  if (!p.activo) {
+    side = [
+      h('button', { class: 'btn btn-sm btn-ghost', type: 'button', 'aria-label': 'Restaurar ' + p.nombre, title: 'Restaurar', onclick: (e) => setActivo(p, true, e.currentTarget) }, icon('restore'), h('span', { text: 'Restaurar' })),
+      h('button', { class: 'btn btn-sm btn-danger-ghost', type: 'button', 'aria-label': 'Eliminar ' + p.nombre, title: 'Eliminar definitivamente', onclick: () => openDelete(p) }, icon('trash'), h('span', { text: 'Eliminar' }))
+    ];
+  } else if (state.sorting) {
+    side = [
+      iconBtn('up', 'Subir ' + p.nombre, () => move(list, i, -1), { disabled: i === 0 }),
+      iconBtn('down', 'Bajar ' + p.nombre, () => move(list, i, 1), { disabled: i === list.length - 1 })
+    ];
+  } else {
+    const sw = h('input', { type: 'checkbox', checked: !!p.agotado, 'aria-label': 'Agotado: ' + p.nombre });
+    const label = h('span', { class: 'stock-label', 'aria-hidden': 'true', text: p.agotado ? 'Agotado' : 'Disponible' });
+    sw.addEventListener('change', () => toggleAgotado(p, sw, row, label));
+    side = [
+      h('label', { class: 'stock', title: 'Marcar como agotado' }, sw, h('span', { class: 'track' }), label),
+      h('button', { class: 'btn btn-sm btn-ghost row-edit', type: 'button', tabindex: -1, 'aria-hidden': 'true', onclick: () => openForm(p) }, icon('edit'), h('span', { text: 'Editar' }))
+    ];
+  }
+  const row = h('li', { class: 'row' + (p.agotado && p.activo ? ' is-out' : ''), 'data-id': p.id }, main, h('div', { class: 'row-side' }, side));
   return row;
 }
 
-async function toggleAgotado(p, sw, row) {
+async function toggleAgotado(p, sw, row, label) {
   const next = sw.checked;
+  label.textContent = next ? 'Agotado' : 'Disponible';
   row.classList.add('pending');
-  sw.disabled = true;
   try {
     await patch(p.id, { agotado: next });
     p.agotado = next;
@@ -196,8 +290,8 @@ async function toggleAgotado(p, sw, row) {
     renderList();
   } catch (err) {
     sw.checked = !next;
+    label.textContent = !next ? 'Agotado' : 'Disponible';
     row.classList.remove('pending');
-    sw.disabled = false;
     toast('No se pudo cambiar: ' + err.message, 'err');
   }
 }
@@ -214,20 +308,37 @@ async function move(list, i, dir) {
     a.orden = ob; b.orden = oa;
     state.productos.sort((x, y) => x.orden - y.orden);
     renderList();
+    const moved = $(`#rows .row[data-id="${CSS.escape(a.id)}"] .icon-btn:${dir < 0 ? 'first-child' : 'last-child'}`);
+    if (moved && !moved.disabled) moved.focus();
   } catch (err) { toast('No se pudo reordenar: ' + err.message, 'err'); }
 }
 
-async function setActivo(p, activo) {
+async function setActivo(p, activo, btn) {
+  if (btn) busy(btn, true);
   try {
     await patch(p.id, { activo });
     p.activo = activo;
-    toast(activo ? `${p.nombre} restaurado` : `${p.nombre} archivado`);
+    toast(activo ? `${p.nombre} restaurado: vuelve a la web` : `${p.nombre} archivado: ya no se ve en la web`);
     renderList();
-  } catch (err) { toast('No se pudo cambiar: ' + err.message, 'err'); }
+    return true;
+  } catch (err) {
+    toast('No se pudo cambiar: ' + err.message, 'err');
+    return false;
+  } finally { if (btn) busy(btn, false); }
+}
+
+function setSorting(on, render = true) {
+  state.sorting = on;
+  const b = $('#sortBtn');
+  b.setAttribute('aria-pressed', String(on));
+  b.querySelector('span').textContent = on ? 'Listo' : 'Ordenar';
+  if (on) { state.cat = 'todos'; state.q = ''; $('#search').value = ''; }
+  if (render) renderList();
 }
 
 $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderList(); });
-$('#catFilter').addEventListener('change', (e) => { state.cat = e.target.value; renderList(); });
+$('#sortBtn').addEventListener('click', () => setSorting(!state.sorting));
+$('#clearFilters').addEventListener('click', () => { state.q = ''; state.cat = 'todos'; $('#search').value = ''; renderList(); });
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
   state.tab = t.dataset.tab;
   document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === t)));
@@ -251,7 +362,7 @@ $('#deleteCancel').addEventListener('click', () => $('#deleteDialog').close());
 $('#deleteOk').addEventListener('click', async () => {
   const p = deleting;
   if ($('#deleteInput').value.trim() !== p.id) return;
-  $('#deleteOk').disabled = true;
+  busy($('#deleteOk'), true);
   try {
     const { data, error } = await sb.from('productos').delete().eq('id', p.id).select('id');
     if (error) throw error;
@@ -264,22 +375,36 @@ $('#deleteOk').addEventListener('click', async () => {
   } catch (err) {
     $('#deleteError').textContent = 'No se pudo eliminar: ' + err.message;
     $('#deleteError').hidden = false;
-    $('#deleteOk').disabled = false;
+  } finally {
+    busy($('#deleteOk'), false);
+    $('#deleteOk').disabled = $('#deleteInput').value.trim() !== (deleting && deleting.id);
   }
 });
 
-// Only Storage URLs; legacy "img/..." paths are never touched. Returns the number of files that could not be removed.
+// Only Storage URLs; legacy "img/..." paths are never touched. Thumbnails go with their photo.
+// Returns the number of main photos that could not be removed.
 async function removeFromStorage(urls) {
-  const paths = urls.map(storagePath).filter(Boolean);
-  if (!paths.length) return 0;
-  const { data, error } = await sb.storage.from(BUCKET).remove(paths);
-  if (error) { console.warn('storage remove:', error.message); return paths.length; }
-  return paths.length - (data ? data.length : 0);   // remove() resolves with the rows actually deleted
+  const mains = urls.map(storagePath).filter(Boolean);
+  if (!mains.length) return 0;
+  const { data, error } = await sb.storage.from(BUCKET).remove([...mains, ...mains.flatMap(variantPaths)]);
+  if (error) { console.warn('storage remove:', error.message); return mains.length; }
+  const gone = new Set((data || []).map((o) => o.name));
+  return mains.filter((m) => !gone.has(m)).length;
 }
 
 /* ---------- form ---------- */
 const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 let idTouched = false;
+
+const FIELDS = ['fNombre', 'fId', 'fMarca', 'fCategoria', 'fGancho', 'fDescripcion', 'fPlaceholder', 'fNota', 'fPrecio', 'fPrecioReg'];
+function serializeForm() {
+  if (!state.form) return '';
+  return JSON.stringify([
+    FIELDS.map((id) => $('#' + id).value), $('#fDestacado').checked, $('#fAgotado').checked,
+    state.form.colores, state.form.specs, state.form.fotos.map((f) => f.url || f.preview)
+  ]);
+}
+const isDirty = () => !!state.form && serializeForm() !== state.snapshot;
 
 function openForm(p) {
   state.editing = p;
@@ -287,17 +412,18 @@ function openForm(p) {
   state.form = {
     colores: p ? [...(p.colores || [])] : [],
     specs: p ? Object.entries(p.specs || {}).map(([k, v]) => ({ k, v: String(v) })) : [],
-    // each: {url} already stored, or {blob, preview} pending upload
+    // each: {url} already stored, or {blob, thumbs, preview} pending upload
     fotos: p ? (p.fotos || []).map((url) => ({ url })) : [],
     removed: []
   };
-  $('#formTitle').textContent = p ? 'Editar producto' : 'Nuevo producto';
+  $('#formTitle').textContent = p ? p.nombre : 'Nuevo producto';
+  $('#formSub').textContent = p ? `${catName(p.categoria)} · ${!p.activo ? 'Archivado' : p.agotado ? 'Agotado' : 'Disponible'}` : 'Completá los datos y guardá para publicarlo en la web.';
   $('#fNombre').value = p ? p.nombre : '';
   $('#fId').value = p ? p.id : '';
   $('#fId').readOnly = !!p;
-  $('#idHint').textContent = p ? '(no se puede cambiar)' : '(se genera del nombre; editable)';
+  $('#idHint').textContent = p ? 'no se puede cambiar' : 'se genera del nombre';
   $('#fMarca').value = p ? p.marca : '';
-  $('#fCategoria').value = p ? p.categoria : (state.categorias[0] || {}).id;
+  $('#fCategoria').value = p ? p.categoria : (state.cat !== 'todos' ? state.cat : (state.categorias[0] || {}).id);
   $('#fGancho').value = p ? p.gancho : '';
   $('#fDescripcion').value = p ? p.descripcion : '';
   $('#fPlaceholder').value = p ? p.placeholder : '';
@@ -306,22 +432,44 @@ function openForm(p) {
   $('#fPrecioReg').value = p && p.precio_regular ? p.precio_regular : '';
   $('#fDestacado').checked = p ? !!p.destacado : false;
   $('#fAgotado').checked = p ? !!p.agotado : false;
+  $('#archiveBtn').hidden = !(p && p.activo);
+  $('#saveBtn').querySelector('span').textContent = p ? 'Guardar cambios' : 'Crear producto';
   $('#formError').hidden = true;
   $('#photoMsg').hidden = true;
-  renderChips(); renderSpecs(); renderPhotos(); renderPreview();
+  renderChips(); renderSpecs(); renderPhotos(); renderPreview(); renderPriceHelp();
+  state.snapshot = serializeForm();
   $('#listView').hidden = true;
   $('#formView').hidden = false;
+  document.body.classList.add('form-open');
   window.scrollTo(0, 0);
+  if (!p) $('#fNombre').focus({ preventScroll: true });
 }
 
-function closeForm() {
+function closeForm(force = false) {
+  if (!force && isDirty() && !confirm('Tenés cambios sin guardar. ¿Descartarlos?')) return false;
   for (const f of state.form.fotos) if (f.preview) URL.revokeObjectURL(f.preview);
+  const lastId = state.editing && state.editing.id;
   state.form = null;
+  state.editing = null;
   $('#formView').hidden = true;
   $('#listView').hidden = false;
+  document.body.classList.remove('form-open');
+  if (lastId) {
+    const row = $(`#rows .row[data-id="${CSS.escape(lastId)}"] .row-main`);
+    if (row) { row.scrollIntoView({ block: 'center' }); row.focus({ preventScroll: true }); }
+  }
+  return true;
 }
-$('#backBtn').addEventListener('click', closeForm);
-$('#cancelBtn').addEventListener('click', closeForm);
+$('#backBtn').addEventListener('click', () => closeForm());
+$('#cancelBtn').addEventListener('click', () => closeForm());
+window.addEventListener('beforeunload', (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+$('#archiveBtn').addEventListener('click', async (e) => {
+  const p = state.editing;
+  if (!p) return;
+  if (isDirty() && !confirm('Tenés cambios sin guardar que se van a perder. ¿Archivar igual?')) return;
+  if (await setActivo(p, false, e.currentTarget)) closeForm(true);
+});
 
 $('#fNombre').addEventListener('input', () => {
   if (!idTouched) $('#fId').value = slug($('#fNombre').value);
@@ -330,11 +478,19 @@ $('#fNombre').addEventListener('input', () => {
 $('#fId').addEventListener('input', () => { idTouched = true; });
 ['fMarca', 'fCategoria', 'fGancho', 'fPlaceholder', 'fPrecio', 'fPrecioReg', 'fAgotado'].forEach((id) => $('#' + id).addEventListener('input', renderPreview));
 $('#fAgotado').addEventListener('change', renderPreview);
+['fPrecio', 'fPrecioReg'].forEach((id) => $('#' + id).addEventListener('input', renderPriceHelp));
+
+function renderPriceHelp() {
+  for (const [id, out] of [['fPrecio', 'fPrecioFmt'], ['fPrecioReg', 'fPrecioRegFmt']]) {
+    const t = $('#' + id).value.trim();
+    $('#' + out).textContent = !t ? '' : /^\d+$/.test(t) && +t > 0 ? `Se muestra como ${money(+t)}` : 'Solo números, sin puntos ni signos';
+  }
+}
 
 // colores
 function renderChips() {
   $('#chips').replaceChildren(...state.form.colores.map((c, i) => h('span', { class: 'chip' }, c,
-    h('button', { type: 'button', text: '×', 'aria-label': 'Quitar ' + c, onclick: () => { state.form.colores.splice(i, 1); renderChips(); } }))));
+    h('button', { type: 'button', 'aria-label': 'Quitar ' + c, onclick: () => { state.form.colores.splice(i, 1); renderChips(); } }, icon('x')))));
 }
 function addChip() {
   const v = $('#chipInput').value.trim();
@@ -349,12 +505,12 @@ $('#chipInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.
 function renderSpecs() {
   const rows = state.form.specs;
   $('#specs').replaceChildren(...rows.map((s, i) => h('div', { class: 'spec' },
-    h('input', { value: s.k, placeholder: 'Nombre (ej. Peso)', 'aria-label': 'Nombre de la especificación', oninput: (e) => { s.k = e.target.value; } }),
-    h('input', { value: s.v, placeholder: 'Valor (ej. 49 g)', 'aria-label': 'Valor', oninput: (e) => { s.v = e.target.value; } }),
+    h('input', { value: s.k, placeholder: 'Nombre, ej. Peso', 'aria-label': 'Nombre de la especificación ' + (i + 1), oninput: (e) => { s.k = e.target.value; } }),
+    h('input', { value: s.v, placeholder: 'Valor, ej. 49 g', 'aria-label': 'Valor de la especificación ' + (i + 1), oninput: (e) => { s.v = e.target.value; } }),
     h('div', { class: 'spec-btns' },
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↑', 'aria-label': 'Subir fila', disabled: i === 0, onclick: () => swap(rows, i, i - 1, renderSpecs) }),
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↓', 'aria-label': 'Bajar fila', disabled: i === rows.length - 1, onclick: () => swap(rows, i, i + 1, renderSpecs) }),
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '×', 'aria-label': 'Quitar fila', onclick: () => { rows.splice(i, 1); renderSpecs(); } })))));
+      iconBtn('up', 'Subir fila', () => swap(rows, i, i - 1, renderSpecs), { disabled: i === 0 }),
+      iconBtn('down', 'Bajar fila', () => swap(rows, i, i + 1, renderSpecs), { disabled: i === rows.length - 1 }),
+      iconBtn('x', 'Quitar fila', () => { rows.splice(i, 1); renderSpecs(); }, { danger: true })))));
 }
 const swap = (arr, i, j, after) => { [arr[i], arr[j]] = [arr[j], arr[i]]; after(); };
 $('#specAdd').addEventListener('click', () => { state.form.specs.push({ k: '', v: '' }); renderSpecs(); $('#specs').lastElementChild.querySelector('input').focus(); });
@@ -362,13 +518,16 @@ $('#specAdd').addEventListener('click', () => { state.form.specs.push({ k: '', v
 // fotos
 function renderPhotos() {
   const fotos = state.form.fotos;
-  $('#photos').replaceChildren(...fotos.map((f, i) => h('li', { class: 'photo' },
-    h('img', { src: f.preview || photoSrc(f.url), alt: 'Foto ' + (i + 1) }),
-    h('span', { class: 'tag' }, i === 0 ? h('strong', { text: 'Portada' }) : 'Foto ' + (i + 1), f.blob ? ' · nueva' : ''),
-    h('div', { class: 'photo-btns' },
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↑', 'aria-label': 'Subir foto', disabled: i === 0, onclick: () => swap(fotos, i, i - 1, () => { renderPhotos(); renderPreview(); }) }),
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '↓', 'aria-label': 'Bajar foto', disabled: i === fotos.length - 1, onclick: () => swap(fotos, i, i + 1, () => { renderPhotos(); renderPreview(); }) }),
-      h('button', { class: 'btn btn-sm btn-icon', type: 'button', text: '×', 'aria-label': 'Quitar foto', onclick: () => removePhoto(i) })))));
+  const after = () => { renderPhotos(); renderPreview(); };
+  const tiles = fotos.map((f, i) => h('li', { class: 'photo' + (i === 0 ? ' is-cover' : '') },
+    f.preview ? h('img', { src: f.preview, alt: 'Foto ' + (i + 1) }) : thumbImg(f.url, 200, 'Foto ' + (i + 1)),
+    h('span', { class: 'photo-badge', text: i === 0 ? 'Portada' : f.blob ? 'Nueva' : String(i + 1) }),
+    h('div', { class: 'photo-tools' },
+      iconBtn('left', 'Mover foto a la izquierda', () => swap(fotos, i, i - 1, after), { disabled: i === 0 }),
+      iconBtn('x', 'Quitar foto', () => removePhoto(i), { danger: true }),
+      iconBtn('right', 'Mover foto a la derecha', () => swap(fotos, i, i + 1, after), { disabled: i === fotos.length - 1 }))));
+  const add = h('li', {}, h('button', { class: 'photo-add', type: 'button', onclick: () => $('#photoInput').click() }, icon('upload'), h('span', { text: fotos.length ? 'Agregar foto' : 'Subir foto' })));
+  $('#photos').replaceChildren(...tiles, add);
 }
 function removePhoto(i) {
   const [f] = state.form.fotos.splice(i, 1);
@@ -393,7 +552,7 @@ function renderPreview() {
   const ph = $('#fPlaceholder').value.trim();
   const media = h('div', { class: 'pmedia' + (agotado ? ' is-agotado' : '') },
     h('div', { class: 'pph', 'aria-hidden': 'true' }, ph ? h('span', { class: 'pph-num', text: ph }) : null, h('span', { class: 'pph-name', text: nombre })),
-    first ? h('img', { src: first.preview || photoSrc(first.url), alt: '' }) : null,
+    first ? (first.preview ? h('img', { src: first.preview, alt: '' }) : thumbImg(first.url, 640)) : null,
     agotado ? h('span', { class: 'pribbon', text: 'Agotado' }) : null);
   let price = null;
   if (!agotado && precio > 0) {
@@ -487,25 +646,41 @@ cc.addEventListener('pointermove', (e) => {
 ['pointerup', 'pointercancel'].forEach((t) => cc.addEventListener(t, () => { crop.drag = null; }));
 $('#cropCancel').addEventListener('click', () => $('#cropDialog').close());
 
+const toJpeg = (canvas, q) => new Promise((r) => canvas.toBlob(r, 'image/jpeg', q));
+
 // Re-encoding through a canvas drops EXIF/GPS. Quality goes down until the file fits in 2 MB.
 $('#cropOk').addEventListener('click', async () => {
-  const s = crop.base * crop.zoom;
-  const out = document.createElement('canvas');
-  out.width = out.height = OUT_SIZE;
-  const ctx = out.getContext('2d');
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, OUT_SIZE, OUT_SIZE);
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(crop.img, -crop.ox / s, -crop.oy / s, crop.view / s, crop.view / s, 0, 0, OUT_SIZE, OUT_SIZE);
-  let q = 0.85, blob;
-  do {
-    blob = await new Promise((r) => out.toBlob(r, 'image/jpeg', q));
-    q -= 0.07;
-  } while (blob && blob.size > MAX_BYTES && q > 0.2);
-  if (!blob || blob.size > MAX_BYTES) { photoMsg('No se pudo reducir la foto por debajo de 2 MB.'); $('#cropDialog').close(); return; }
-  state.form.fotos.push({ blob, preview: URL.createObjectURL(blob) });
-  $('#cropDialog').close();
-  renderPhotos(); renderPreview();
+  const btn = $('#cropOk');
+  busy(btn, true);
+  try {
+    const s = crop.base * crop.zoom;
+    const out = document.createElement('canvas');
+    out.width = out.height = OUT_SIZE;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, OUT_SIZE, OUT_SIZE);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(crop.img, -crop.ox / s, -crop.oy / s, crop.view / s, crop.view / s, 0, 0, OUT_SIZE, OUT_SIZE);
+    let q = 0.85, blob;
+    do {
+      blob = await toJpeg(out, q);
+      q -= 0.07;
+    } while (blob && blob.size > MAX_BYTES && q > 0.2);
+    if (!blob || blob.size > MAX_BYTES) { photoMsg('No se pudo reducir la foto por debajo de 2 MB.'); $('#cropDialog').close(); return; }
+    // small copies for the catalog grid and the thumbnail strips
+    const thumbs = {};
+    for (const size of THUMB_SIZES) {
+      const t = document.createElement('canvas');
+      t.width = t.height = size;
+      const tc = t.getContext('2d');
+      tc.imageSmoothingQuality = 'high';
+      tc.drawImage(out, 0, 0, size, size);
+      thumbs[size] = await toJpeg(t, 0.8);
+    }
+    state.form.fotos.push({ blob, thumbs, preview: URL.createObjectURL(blob) });
+    $('#cropDialog').close();
+    renderPhotos(); renderPreview();
+  } finally { busy(btn, false); }
 });
 
 /* ---------- save ---------- */
@@ -518,23 +693,23 @@ function formError(msg) {
 function parsePrice(raw, label) {
   const t = raw.trim();
   if (!t) return null;
-  if (!/^\d+$/.test(t) || parseInt(t, 10) <= 0) throw new Error(`${label} debe ser un entero positivo o quedar vacío`);
+  if (!/^\d+$/.test(t) || parseInt(t, 10) <= 0) throw new Error(`${label} debe ser un número entero, sin puntos ni signos, o quedar vacío`);
   return parseInt(t, 10);
 }
 
 function collect() {
   const req = (id, label) => {
     const v = $('#' + id).value.trim();
-    if (!v) throw new Error(`${label} es obligatorio`);
+    if (!v) { $('#' + id).focus(); throw new Error(`Falta ${label}`); }
     return v;
   };
-  const nombre = req('fNombre', 'El nombre');
-  const id = state.editing ? state.editing.id : req('fId', 'El id');
+  const nombre = req('fNombre', 'el nombre');
+  const id = state.editing ? state.editing.id : req('fId', 'el id');
   if (!/^[a-z0-9-]+$/.test(id)) throw new Error('El id solo puede tener minúsculas, números y guiones');
-  const marca = req('fMarca', 'La marca');
-  const gancho = req('fGancho', 'El gancho');
-  const descripcion = req('fDescripcion', 'La descripción');
-  const placeholder = req('fPlaceholder', 'El placeholder');
+  const marca = req('fMarca', 'la marca');
+  const gancho = req('fGancho', 'el gancho');
+  const descripcion = req('fDescripcion', 'la descripción');
+  const placeholder = req('fPlaceholder', 'el placeholder');
   const precio = parsePrice($('#fPrecio').value, 'El precio');
   const precio_regular = parsePrice($('#fPrecioReg').value, 'El precio regular');
   if (precio_regular !== null && (precio === null || precio_regular <= precio)) throw new Error('El precio regular tiene que ser mayor que el precio');
@@ -554,13 +729,18 @@ function collect() {
   };
 }
 
+async function upload(path, blob) {
+  const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+  if (error) throw new Error('No se pudo subir la foto: ' + error.message);
+}
+
 $('#productForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   formError('');
   let row;
   try { row = collect(); } catch (err) { formError(err.message); return; }
   const btn = $('#saveBtn');
-  btn.disabled = true;
+  busy(btn, true);
   const uploaded = [];
   try {
     if (!state.editing) {
@@ -574,9 +754,14 @@ $('#productForm').addEventListener('submit', async (e) => {
     for (const f of state.form.fotos) {
       if (!f.blob) { urls.push(f.url); continue; }
       const path = `${row.id}/${Date.now()}-${n++}.jpg`;
-      const { error } = await sb.storage.from(BUCKET).upload(path, f.blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
-      if (error) throw new Error('No se pudo subir la foto: ' + error.message);
+      await upload(path, f.blob);
       uploaded.push(path);
+      // thumbnails are a speed-up, not a requirement: the site falls back to the full photo
+      const variants = variantPaths(path);
+      for (const [i, size] of THUMB_SIZES.entries()) {
+        try { await upload(variants[i], f.thumbs[size]); uploaded.push(variants[i]); }
+        catch (err) { console.warn('miniatura:', err.message); }
+      }
       urls.push(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
     }
     row.fotos = urls;
@@ -591,14 +776,14 @@ $('#productForm').addEventListener('submit', async (e) => {
       if (!data || data.length !== 1) throw new Error('No se creó (sin permiso)');
     }
     const failed = await removeFromStorage(state.form.removed);   // replaced/removed photos, only after the row saved
-    toast(failed ? 'Guardado, pero no se pudieron borrar fotos viejas de Storage' : 'Producto guardado', failed ? 'err' : 'ok');
-    closeForm();
+    toast(failed ? 'Guardado, pero no se pudieron borrar fotos viejas de Storage' : (state.editing ? 'Cambios guardados' : 'Producto creado'), failed ? 'err' : 'ok');
+    closeForm(true);
     await loadProductos();
   } catch (err) {
     if (uploaded.length) await sb.storage.from(BUCKET).remove(uploaded).catch(() => {});
     formError(err.message);
   } finally {
-    btn.disabled = false;
+    busy(btn, false);
   }
 });
 

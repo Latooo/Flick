@@ -41,6 +41,19 @@ const SUPABASE_URL = 'https://nisegpuyvfujzrcjlhtw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ULilyHHntqtHTcrihvy_Pw_8ylQBEC_';  // public (publishable) key
 const SUPABASE_TIMEOUT_MS = 4000;  // under INTRO.hardCapMs so the intro never waits longer than this
 const SUPABASE_FIELDS = 'id,nombre,marca,categoria,destacado,agotado,colores,gancho,descripcion,specs,nota_honesta,fotos,tiene_fotos,placeholder,precio,precio_regular';
+const STORAGE_PREFIX = SUPABASE_URL + '/storage/v1/object/public/productos/';
+
+// Lightweight copies of each photo, so the grid and the modal strip don't pull 1600 px JPEGs:
+//   img/x3-1.jpg            -> img/thumb/x3-1-640.webp   (made by scripts/miniaturas.py)
+//   <storage>/id/123-0.jpg  -> <storage>/id/123-0-640.jpg (uploaded by the admin panel)
+// Anything else is used as-is. If a thumbnail is missing, watchImages() falls back to the original.
+function thumbSrc(src, size) {
+  if (typeof src !== 'string') return src;
+  const local = /^img\/([^/]+)\.jpe?g$/i.exec(src);
+  if (local) return `img/thumb/${local[1]}-${size}.webp`;
+  if (src.startsWith(STORAGE_PREFIX) && /\.jpg$/i.test(src)) return src.replace(/\.jpg$/i, `-${size}.jpg`);
+  return src;
+}
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -332,11 +345,12 @@ function phValueHTML(v) {
     : `<span class="ph-num">${esc(v)}</span>`;
 }
 
-function mediaHTML(p, src, { small = false, eager = false } = {}) {
+function mediaHTML(p, src, { small = false, eager = false, thumb = 0 } = {}) {
   const num = hasValue(p.placeholder) ? phValueHTML(p.placeholder) : '';
   // no <img> unless the product has photos in img/ (tiene_fotos) — avoids 404s
+  const shown = thumb ? thumbSrc(src, thumb) : src;
   const img = p.tiene_fotos === true && hasValue(src)
-    ? `<img src="${esc(src)}" alt="${esc(p.nombre)}"${eager ? '' : ' loading="lazy"'}>`
+    ? `<img src="${esc(shown)}"${shown !== src ? ` data-full="${esc(src)}"` : ''} alt="${esc(p.nombre)}"${eager ? '' : ' loading="lazy"'} decoding="async">`
     : '';
   // not aria-hidden, unlike .ph: this is the only text equivalent for "sold out" —
   // it has to reach the card's accessible name, not just show as a colored ribbon
@@ -345,12 +359,21 @@ function mediaHTML(p, src, { small = false, eager = false } = {}) {
 }
 
 // Error events don't bubble, so listen in capture phase on a container.
+// A missing thumbnail falls back once to the full photo (data-full); only then is the image hidden.
+function failImage(img) {
+  if (img.dataset.full && !img.dataset.fellBack) {
+    img.dataset.fellBack = '1';
+    img.src = img.dataset.full;
+    return;
+  }
+  img.hidden = true;
+}
 function watchImages(root) {
   root.addEventListener('error', (e) => {
-    if (e.target.tagName === 'IMG') e.target.hidden = true;
+    if (e.target.tagName === 'IMG') failImage(e.target);
   }, true);
   root.querySelectorAll('img').forEach((img) => {
-    if (img.complete && img.naturalWidth === 0) img.hidden = true;
+    if (img.complete && img.naturalWidth === 0) failImage(img);
   });
 }
 
@@ -371,7 +394,7 @@ function renderGrid() {
   grid.innerHTML = list
     .map((p) => `
       <article class="card" tabindex="0" role="button" data-id="${esc(p.id)}" aria-haspopup="dialog">
-        <div class="media${p.agotado ? ' is-agotado' : ''}">${mediaHTML(p, (p.fotos || [])[0])}</div>
+        <div class="media${p.agotado ? ' is-agotado' : ''}">${mediaHTML(p, (p.fotos || [])[0], { thumb: 640 })}</div>
         <div class="card-body">
           <p class="brand">${esc(p.marca)}</p>
           <h3 class="card-name">${esc(p.nombre)}</h3>
@@ -424,7 +447,7 @@ function modalHTML(p) {
   const colores = (p.colores || []).filter(hasValue);
 
   const thumbs = p.tiene_fotos === true && fotos.length > 1
-    ? `<div class="thumbs">${fotos.map((f, i) => `<button type="button" class="thumb" data-src="${esc(f)}" aria-label="Ver foto ${i + 1}" aria-current="${i === 0}"><div class="ph ph-sm" aria-hidden="true"><span class="ph-num">${i + 1}</span></div><img src="${esc(f)}" alt="" loading="lazy"></button>`).join('')}</div>`
+    ? `<div class="thumbs">${fotos.map((f, i) => `<button type="button" class="thumb" data-src="${esc(f)}" aria-label="Ver foto ${i + 1}" aria-current="${i === 0}"><div class="ph ph-sm" aria-hidden="true"><span class="ph-num">${i + 1}</span></div><img src="${esc(thumbSrc(f, 200))}"${thumbSrc(f, 200) !== f ? ` data-full="${esc(f)}"` : ''} alt="" loading="lazy" decoding="async"></button>`).join('')}</div>`
     : '';
 
   return `

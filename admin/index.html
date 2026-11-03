@@ -2,154 +2,199 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0A0A0A">
   <title>Flick · Panel</title>
   <link rel="icon" href="../img/marca/flick-simbolo.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://nisegpuyvfujzrcjlhtw.supabase.co" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+  <!-- Icon set: one stroke family, drawn on a 24 px grid -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16 16"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14.5 7.5 3 3"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></symbol>
+      <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.7-6.2"/><path d="M3.5 4v5h5"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 4H5v16h4M16 16.5 20.5 12 16 7.5M20.5 12H9"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11.5 18.5 5 12l6.5-6.5"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+      <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3.5 7.5 7 4l3.5 3.5M17 20V4M13.5 16.5 17 20l3.5-3.5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    </defs>
+  </svg>
+
   <main id="loginView" class="login" hidden>
     <form id="loginForm" class="login-card" novalidate>
-      <h1 class="display">Flick · Panel</h1>
-      <p class="muted">Acceso solo para administradores.</p>
+      <div class="brand brand-lg"><img src="../img/marca/flick-simbolo.svg" alt="" width="34" height="34"><span class="display">Flick</span></div>
+      <div class="login-copy">
+        <h1>Panel de productos</h1>
+        <p class="muted">Acceso solo para administradores.</p>
+      </div>
       <label class="field"><span>Correo</span>
-        <input id="loginEmail" type="email" autocomplete="username" required>
+        <input id="loginEmail" type="email" autocomplete="username" inputmode="email" required>
       </label>
       <label class="field"><span>Contraseña</span>
         <input id="loginPass" type="password" autocomplete="current-password" required>
       </label>
       <p id="loginError" class="error" role="alert" hidden></p>
-      <button id="loginBtn" class="btn btn-primary" type="submit">Entrar</button>
+      <button id="loginBtn" class="btn btn-primary btn-block" type="submit">Entrar</button>
     </form>
   </main>
 
   <div id="appView" hidden>
     <header class="topbar">
-      <h1 class="display">Flick · Panel</h1>
+      <a class="brand" href="./" aria-label="Flick · Panel, volver a la lista"><img src="../img/marca/flick-simbolo.svg" alt="" width="26" height="26"><span class="display">Flick</span><span class="brand-sub">Panel</span></a>
       <div class="topbar-actions">
         <span id="whoami" class="muted small"></span>
-        <button id="logoutBtn" class="btn" type="button">Cerrar sesión</button>
+        <button id="logoutBtn" class="btn btn-ghost" type="button"><svg class="ic"><use href="#i-logout"/></svg><span>Salir</span></button>
       </div>
     </header>
 
     <section id="listView" class="wrap">
-      <div class="toolbar">
-        <input id="search" type="search" placeholder="Buscar por nombre o marca" aria-label="Buscar por nombre o marca">
-        <select id="catFilter" aria-label="Filtrar por categoría"></select>
-        <button id="newBtn" class="btn btn-primary" type="button">+ Nuevo producto</button>
+      <div class="page-head">
+        <div>
+          <h1 class="display page-title">Productos</h1>
+          <p id="summary" class="muted small tnum"></p>
+        </div>
+        <button id="newBtn" class="btn btn-primary" type="button"><svg class="ic"><use href="#i-plus"/></svg><span>Nuevo<span class="hide-sm"> producto</span></span></button>
       </div>
-      <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-tab="activos" aria-selected="true" type="button">Activos <span id="countActivos"></span></button>
-        <button class="tab" role="tab" data-tab="archivados" aria-selected="false" type="button">Archivados <span id="countArchivados"></span></button>
+
+      <div class="controls">
+        <label class="search">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input id="search" type="search" placeholder="Buscar por nombre o marca" aria-label="Buscar por nombre o marca" autocomplete="off">
+        </label>
+        <div class="seg" role="tablist" aria-label="Estado">
+          <button class="tab" role="tab" data-tab="activos" aria-selected="true" type="button">Activos <span class="count tnum" id="countActivos"></span></button>
+          <button class="tab" role="tab" data-tab="agotados" aria-selected="false" type="button">Agotados <span class="count tnum" id="countAgotados"></span></button>
+          <button class="tab" role="tab" data-tab="archivados" aria-selected="false" type="button">Archivados <span class="count tnum" id="countArchivados"></span></button>
+        </div>
+        <button id="sortBtn" class="btn btn-ghost" type="button" aria-pressed="false"><svg class="ic"><use href="#i-sort"/></svg><span>Ordenar</span></button>
       </div>
-      <ul id="rows" class="rows"></ul>
-      <p id="emptyMsg" class="muted" hidden>No hay productos que coincidan.</p>
+
+      <div id="catChips" class="cats" role="group" aria-label="Filtrar por categoría"></div>
+      <p id="sortHint" class="hint" hidden>Modo ordenar: subí o bajá productos para cambiar el orden en la web. Tocá <strong>Listo</strong> al terminar.</p>
+
+      <ul id="rows" class="rows" aria-live="polite"></ul>
+      <div id="emptyMsg" class="empty" hidden>
+        <p id="emptyText">No hay productos que coincidan.</p>
+        <button id="clearFilters" class="btn btn-ghost" type="button">Limpiar filtros</button>
+      </div>
     </section>
 
-    <section id="formView" class="wrap" hidden>
+    <section id="formView" class="wrap wrap-form" hidden>
       <form id="productForm" class="form" novalidate>
         <div class="form-head">
-          <button id="backBtn" class="btn" type="button">← Volver</button>
-          <h2 id="formTitle" class="display"></h2>
+          <button id="backBtn" class="btn btn-ghost btn-icon" type="button" aria-label="Volver a la lista"><svg class="ic"><use href="#i-back"/></svg></button>
+          <div class="form-head-text">
+            <h1 id="formTitle" class="display page-title"></h1>
+            <p id="formSub" class="muted small"></p>
+          </div>
         </div>
 
         <div class="form-grid">
           <div class="form-main">
-            <fieldset>
-              <legend>Datos</legend>
-              <label class="field"><span>Nombre</span><input id="fNombre" required></label>
-              <label class="field"><span>ID <em class="muted small" id="idHint"></em></span>
-                <input id="fId" required pattern="[a-z0-9-]+" autocapitalize="none" spellcheck="false"></label>
+            <section class="panel">
+              <h2 class="panel-title">Datos</h2>
+              <label class="field"><span>Nombre</span><input id="fNombre" required autocomplete="off"></label>
+              <label class="field"><span>ID <em class="muted" id="idHint"></em></span>
+                <input id="fId" required pattern="[a-z0-9-]+" autocapitalize="none" spellcheck="false" autocomplete="off"></label>
               <div class="two">
-                <label class="field"><span>Marca</span><input id="fMarca" required></label>
+                <label class="field"><span>Marca</span><input id="fMarca" required autocomplete="off"></label>
                 <label class="field"><span>Categoría</span><select id="fCategoria" required></select></label>
               </div>
-              <label class="field"><span>Gancho (frase corta)</span><input id="fGancho" required></label>
+              <label class="field"><span>Gancho <em class="muted">frase corta de la tarjeta</em></span><input id="fGancho" required></label>
               <label class="field"><span>Descripción</span><textarea id="fDescripcion" rows="4" required></textarea></label>
-              <label class="field"><span>Placeholder (texto grande bajo la foto, ej. "49 g")</span><input id="fPlaceholder" required></label>
-              <label class="field"><span>Nota honesta (opcional)</span><textarea id="fNota" rows="2"></textarea></label>
-            </fieldset>
+              <label class="field"><span>Placeholder <em class="muted">texto grande si no hay foto, ej. "49 g"</em></span><input id="fPlaceholder" required></label>
+              <label class="field"><span>Nota honesta <em class="muted">opcional</em></span><textarea id="fNota" rows="2"></textarea></label>
+            </section>
 
-            <fieldset>
-              <legend>Precio</legend>
+            <section class="panel">
+              <h2 class="panel-title">Precio y estado</h2>
               <div class="two">
-                <label class="field"><span>Precio (COP)</span><input id="fPrecio" inputmode="numeric" placeholder="vacío = sin precio"></label>
-                <label class="field"><span>Precio regular (COP)</span><input id="fPrecioReg" inputmode="numeric" placeholder="vacío = sin promo"></label>
+                <label class="field"><span>Precio (COP)</span><input id="fPrecio" inputmode="numeric" placeholder="Vacío = sin precio" class="tnum"><small id="fPrecioFmt" class="field-help tnum"></small></label>
+                <label class="field"><span>Precio regular (COP)</span><input id="fPrecioReg" inputmode="numeric" placeholder="Vacío = sin promo" class="tnum"><small id="fPrecioRegFmt" class="field-help tnum"></small></label>
               </div>
-            </fieldset>
+              <div class="switches">
+                <label class="switch switch-out"><input id="fAgotado" type="checkbox"><span class="track"></span><span>Agotado</span></label>
+                <label class="switch switch-accent"><input id="fDestacado" type="checkbox"><span class="track"></span><span>Destacado</span></label>
+              </div>
+            </section>
 
-            <fieldset>
-              <legend>Estado</legend>
-              <label class="switch"><input id="fDestacado" type="checkbox"><span class="track"></span><span>Destacado</span></label>
-              <label class="switch"><input id="fAgotado" type="checkbox"><span class="track"></span><span>Agotado</span></label>
-            </fieldset>
-
-            <fieldset>
-              <legend>Colores</legend>
+            <section class="panel">
+              <h2 class="panel-title">Colores</h2>
               <div id="chips" class="chips"></div>
               <div class="inline">
-                <input id="chipInput" placeholder="Agregar color y Enter" aria-label="Nuevo color">
+                <input id="chipInput" placeholder="Agregar color y Enter" aria-label="Nuevo color" autocomplete="off">
                 <button id="chipAdd" class="btn" type="button">Agregar</button>
               </div>
-            </fieldset>
+            </section>
 
-            <fieldset>
-              <legend>Especificaciones</legend>
+            <section class="panel">
+              <h2 class="panel-title">Especificaciones</h2>
               <div id="specs" class="specs"></div>
-              <button id="specAdd" class="btn" type="button">+ Agregar fila</button>
-            </fieldset>
+              <button id="specAdd" class="btn btn-ghost" type="button"><svg class="ic"><use href="#i-plus"/></svg><span>Agregar fila</span></button>
+            </section>
           </div>
 
           <div class="form-side">
-            <fieldset>
-              <legend>Fotos <span class="muted small">(la primera es la de la tarjeta)</span></legend>
+            <section class="panel">
+              <h2 class="panel-title">Fotos <span class="muted panel-note">la primera es la portada</span></h2>
               <ul id="photos" class="photos"></ul>
-              <label class="btn file-btn">+ Subir foto
-                <input id="photoInput" type="file" accept="image/*" hidden>
-              </label>
               <p id="photoMsg" class="error" role="alert" hidden></p>
-            </fieldset>
-            <fieldset>
-              <legend>Vista previa de la tarjeta</legend>
+              <input id="photoInput" type="file" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true">
+            </section>
+            <section class="panel panel-preview">
+              <h2 class="panel-title">Vista previa</h2>
               <div id="preview" class="preview"></div>
-            </fieldset>
+            </section>
           </div>
         </div>
 
-        <p id="formError" class="error" role="alert" hidden></p>
-        <div class="form-actions">
-          <button id="saveBtn" class="btn btn-primary" type="submit">Guardar</button>
-          <button id="cancelBtn" class="btn" type="button">Cancelar</button>
+        <p id="formError" class="error form-error" role="alert" hidden></p>
+        <div class="action-bar">
+          <button id="archiveBtn" class="btn btn-ghost btn-quiet" type="button" hidden><svg class="ic"><use href="#i-archive"/></svg><span>Archivar</span></button>
+          <span class="spacer"></span>
+          <button id="cancelBtn" class="btn btn-ghost" type="button">Cancelar</button>
+          <button id="saveBtn" class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-check"/></svg><span>Guardar</span></button>
         </div>
       </form>
     </section>
   </div>
 
   <dialog id="cropDialog" class="dialog">
-    <h2 class="display">Recortar foto</h2>
-    <p class="muted small">Arrastrá para mover y usá el control para acercar. Salida: 1600×1600.</p>
+    <h2 class="dialog-title">Recortar foto</h2>
+    <p class="muted small">Arrastrá para mover y usá el control para acercar. Sale en 1600 × 1600.</p>
     <canvas id="cropCanvas" class="crop-canvas"></canvas>
     <input id="cropZoom" type="range" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
-    <div class="form-actions">
+    <div class="dialog-actions">
+      <button id="cropCancel" class="btn btn-ghost" type="button">Cancelar</button>
       <button id="cropOk" class="btn btn-primary" type="button">Usar foto</button>
-      <button id="cropCancel" class="btn" type="button">Cancelar</button>
     </div>
   </dialog>
 
   <dialog id="deleteDialog" class="dialog">
-    <h2 class="display">Eliminar definitivamente</h2>
-    <p>Se borra la fila y sus fotos de Storage. No se puede deshacer.</p>
-    <p>Escribí el id <strong id="deleteId" class="mono"></strong> para confirmar.</p>
-    <input id="deleteInput" autocomplete="off" aria-label="Escribí el id para confirmar">
+    <h2 class="dialog-title">Eliminar definitivamente</h2>
+    <p>Se borran el producto y sus fotos de Storage. No se puede deshacer.</p>
+    <p>Escribí <strong id="deleteId" class="mono"></strong> para confirmar.</p>
+    <input id="deleteInput" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Escribí el id para confirmar">
     <p id="deleteError" class="error" role="alert" hidden></p>
-    <div class="form-actions">
+    <div class="dialog-actions">
+      <button id="deleteCancel" class="btn btn-ghost" type="button">Cancelar</button>
       <button id="deleteOk" class="btn btn-danger" type="button" disabled>Eliminar</button>
-      <button id="deleteCancel" class="btn" type="button">Cancelar</button>
     </div>
   </dialog>
 

@@ -1,0 +1,7 @@
+# Netlify: caché del navegador para fotos y video.
+# Las fotos se revalidan a diario; mientras tanto se sirven al instante desde la caché.
+# Si se reemplaza una foto conservando el mismo nombre, puede verse la vieja hasta 1 día.
+/img/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/media/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000

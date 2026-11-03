@@ -146,7 +146,7 @@ def main():
 
         # 4) editar y marcar agotado; verlo en el sitio publico
         pg.fill("#search", "zz prueba")
-        pg.locator(f'#rows .row[data-id="{ID}"]').get_by_text("Editar").click()
+        pg.locator(f'#rows .row[data-id="{ID}"] .row-main').click()
         pg.wait_for_selector("#formView:not([hidden])")
         check("al editar el id es solo lectura", pg.get_attribute("#fId", "readonly") is not None)
         pg.locator("#fAgotado").evaluate("e => e.click()")   # el input real esta oculto tras el interruptor
@@ -157,7 +157,9 @@ def main():
         check("sitio publico: sale con cinta de agotado", tarj.get(ID) is True, str(tarj.get(ID)))
 
         # 5) archivar: desaparece del sitio
-        pg.locator(f'#rows .row[data-id="{ID}"]').get_by_text("Archivar").click()
+        pg.locator(f'#rows .row[data-id="{ID}"] .row-main').click()
+        pg.wait_for_selector("#formView:not([hidden])")
+        pg.click("#archiveBtn")
         pg.wait_for_selector(f'#rows .row[data-id="{ID}"]', state="detached", timeout=15000)
         tarj = tarjetas_sitio(br)
         check("sitio publico: archivado desaparece", ID not in tarj)
@@ -165,7 +167,7 @@ def main():
 
         # 6) eliminar desde Archivados
         pg.click('.tab[data-tab="archivados"]')
-        pg.locator(f'#rows .row[data-id="{ID}"]').get_by_text("Eliminar").click()
+        pg.locator(f'#rows .row[data-id="{ID}"]').locator('.btn-danger-ghost').click()
         pg.fill("#deleteInput", ID)
         pg.click("#deleteOk")
         pg.wait_for_selector("#deleteDialog", state="hidden", timeout=30000)
@@ -188,7 +190,7 @@ def main():
         mp.click("#loginBtn")
         mp.wait_for_selector("#rows .row", timeout=20000)
         mp.screenshot(path=str(SHOTS / "e2e_lista_m390.png"))
-        mp.locator("#rows .row").first.get_by_text("Editar").click()
+        mp.locator("#rows .row .row-main").first.click()
         mp.wait_for_selector("#formView:not([hidden])")
         mp.screenshot(path=str(SHOTS / "e2e_form_m390.png"), full_page=True)
         check("390 px sin scroll horizontal", not mp.evaluate("document.documentElement.scrollWidth > innerWidth"))
