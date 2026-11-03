@@ -43,6 +43,16 @@ def descargar(url):
         return e.code, b""
 
 
+def api_admin(metodo, ruta, cuerpo=None, token=None):
+    cab = {"apikey": KEY, "Content-Type": "application/json"}
+    if token:
+        cab["Authorization"] = "Bearer " + token
+    req = urllib.request.Request("https://nisegpuyvfujzrcjlhtw.supabase.co" + ruta, method=metodo, headers=cab,
+                                 data=json.dumps(cuerpo).encode() if cuerpo is not None else None)
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read() or b"null")
+
+
 def foto_con_gps(ruta):
     im = Image.new("RGB", (2400, 1800), (40, 90, 160))
     ex = Image.Exif()
@@ -158,12 +168,15 @@ def main():
         pg.locator(f'#rows .row[data-id="{ID}"]').get_by_text("Eliminar").click()
         pg.fill("#deleteInput", ID)
         pg.click("#deleteOk")
-        pg.wait_for_selector("#deleteDialog:not([open])", timeout=30000)
+        pg.wait_for_selector("#deleteDialog", state="hidden", timeout=30000)
         pg.wait_for_timeout(800)
-        filas = rest_get(f"select=id&id=eq.{ID}")
-        check("fila eliminada", filas == [])
-        estado2, _ = descargar(url)
-        check("foto eliminada de Storage", estado2 != 200, f"HTTP {estado2}")
+        # la URL publica puede seguir sirviendo la foto desde cache (cache-control de 1 anio), asi que se
+        # verifica con la sesion de admin: la fila (incluye archivados) y la lista real de objetos de Storage
+        token = api_admin("POST", "/auth/v1/token?grant_type=password", {"email": email, "password": pw_})["access_token"]
+        filas = api_admin("GET", f"/rest/v1/productos?select=id&id=eq.{ID}", token=token)
+        check("fila eliminada (vista admin, incluye archivados)", filas == [], str(filas))
+        objetos = api_admin("POST", "/storage/v1/object/list/productos", {"prefix": ID, "limit": 100}, token=token)
+        check("sin archivos en Storage bajo zz-prueba-panel/", objetos == [], str(objetos))
 
         # 7) movil: sesion nueva en 390 px
         m = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True)

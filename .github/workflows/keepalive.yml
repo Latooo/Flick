@@ -1,0 +1,21 @@
+name: Keep-alive de Supabase
+
+# Una consulta de lectura al dia para que el proyecto gratis de Supabase no se pause por inactividad.
+# No hace commit ni push, asi que no dispara un deploy de Netlify.
+on:
+  schedule:
+    - cron: '17 13 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Consultar productos
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            -H "apikey: sb_publishable_ULilyHHntqtHTcrihvy_Pw_8ylQBEC_" \
+            "https://nisegpuyvfujzrcjlhtw.supabase.co/rest/v1/productos?select=id&limit=1"
