@@ -15,7 +15,8 @@ const ZOOM = {
   fill: 0.82,        // keyboard box takes up to this share of the stage when zoomed
   fadeDelayMs: 500,  // close-up starts arriving while the wall fades (wall fade: 500-1000 ms)
   closeMs: 1100,     // matches the wall's return transition in vitrina.css
-  bootDarkMs: 450,   // lamps stay off this long before they start to flicker
+  bootDarkMs: 450,   // everything stays off this long, then the neon sign buzzes on
+  lampsAfterMs: 900, // lamps start flickering this long after the sign
   bootStepMs: 220,   // delay between one lamp and the next
 };
 
@@ -292,13 +293,13 @@ async function lightsOn() {
   let k = 0;
   SPOTS.forEach((s) => {
     if (s.state !== 'on' || !s.el) return;
-    s.el.style.setProperty('--boot-d', ((k * ZOOM.bootStepMs + Math.random() * 120) / 1000).toFixed(2) + 's');
+    s.el.style.setProperty('--boot-d', ((ZOOM.lampsAfterMs + k * ZOOM.bootStepMs + Math.random() * 120) / 1000).toFixed(2) + 's');
     k++;
   });
   await wait(ZOOM.bootDarkMs);
   stage.classList.add('is-lighting');
   stage.classList.remove('is-booting');
-  setTimeout(() => stage.classList.remove('is-lighting'), 1500 + k * ZOOM.bootStepMs + 300);
+  setTimeout(() => stage.classList.remove('is-lighting'), ZOOM.lampsAfterMs + 1500 + k * ZOOM.bootStepMs + 300);
 }
 
 /* ---------- boot ---------- */

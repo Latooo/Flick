@@ -65,6 +65,42 @@
 .vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .vt-spots { position: absolute; inset: 0; }
 
+/* ---------- neon sign (Flick logo as tubes, top of the wall) ---------- */
+.vt-neon {
+  position: absolute; left: 50%; top: 3.2%;
+  width: 21cqw; transform: translateX(-50%);
+  pointer-events: none;
+  --tube: #46E3DF; --core: #EAFFFE; --glow: rgba(44,180,178,.95);
+}
+.vt-neon-svg { position: relative; display: block; width: 100%; height: auto; overflow: visible; }
+#vtNeonShape path { stroke-width: var(--nw, 12); }
+#vtNeonShape .sym path { stroke-width: calc(var(--nw, 12) / .75); }   /* the symbol group is drawn at 75% */
+.vt-neon-glass { --nw: 15; stroke: rgba(150,170,170,.16); }          /* unlit glass tubes */
+.vt-neon-tube  { --nw: 15; stroke: var(--tube); }
+.vt-neon-core  { --nw: 5;  stroke: var(--core); }
+.vt-neon-lit {
+  filter: drop-shadow(0 0 .25cqw var(--glow)) drop-shadow(0 0 .9cqw var(--glow)) drop-shadow(0 0 2.2cqw rgba(44,180,178,.55));
+}
+.vt-neon-spill {   /* teal light on the pegboard around the sign */
+  position: absolute; left: -35%; right: -35%; top: -60%; bottom: -90%;
+  background: radial-gradient(ellipse 50% 50% at 50% 45%, rgba(44,180,178,.28), rgba(44,180,178,.08) 55%, transparent 75%);
+  mix-blend-mode: screen;
+}
+.vt-stage.is-booting .vt-neon-lit,
+.vt-stage.is-booting .vt-neon-spill { opacity: 0; }
+.vt-stage.is-lighting .vt-neon-lit,
+.vt-stage.is-lighting .vt-neon-spill { animation: vt-neon-on 1.3s step-end .15s both; }
+@keyframes vt-neon-on {   /* neon buzzing on: uneven, then steady */
+  0%   { opacity: 0; }
+  6%   { opacity: .7; }
+  9%   { opacity: .1; }
+  15%  { opacity: .9; }
+  19%  { opacity: 0; }
+  33%  { opacity: 1; }
+  36%  { opacity: .35; }
+  41%, 100% { opacity: 1; }
+}
+
 /* each spot: lamp light + optional pool / dim + click area + tag */
 .vt-spot {
   --lamp-c: rgba(255,233,204,.95);
@@ -277,5 +313,7 @@
   .vt-stage.is-open .vt-close { transition: opacity .2s linear, visibility 0s; }
   .vt-close-img { transform: none; }
   .vt-stage.is-lighting .vt-spot[data-state="on"] .vt-lamp,
-  .vt-stage.is-lighting .vt-spot[data-state="on"] .vt-pool { animation: none; }
+  .vt-stage.is-lighting .vt-spot[data-state="on"] .vt-pool,
+  .vt-stage.is-lighting .vt-neon-lit,
+  .vt-stage.is-lighting .vt-neon-spill { animation: none; }
 }
