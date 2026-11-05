@@ -13,7 +13,10 @@ const SUPABASE_FIELDS = 'id,nombre,marca,categoria,agotado,gancho,precio,precio_
 
 const ZOOM = {
   fill: 0.82,        // keyboard box takes up to this share of the stage when zoomed
-  fadeDelayMs: 560,  // the wall dips to black from 420 ms; the close-up comes in right after
+  fadeDelayMs: 500,  // close-up starts arriving while the wall fades (wall fade: 500-1000 ms)
+  closeMs: 1100,     // matches the wall's return transition in vitrina.css
+  bootDarkMs: 450,   // lamps stay off this long before they start to flicker
+  bootStepMs: 220,   // delay between one lamp and the next
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,6 +25,7 @@ const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ESC[c]);
 const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== '';
 const isInt = (v) => Number.isInteger(v);
 const money = (n) => '$' + new Intl.NumberFormat('es-CO').format(n);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isPhone = () => matchMedia('(max-width: 699px)').matches;
 const WA_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.4-.4.4c-.1.2-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.8 1.2 2.1 1.3.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>';
@@ -152,9 +156,12 @@ function preload(i) {
   const s = SPOTS[i];
   if (!s || !s.e.cerca || preloaded.has(i) || isPhone()) return;
   preloaded.add(i);
+  // decode ahead of the click so the zoom never waits on a 2000 px image
   const img = new Image();
+  img.decoding = 'async';
   img.sizes = '(max-width: 1600px) 100vw, 1600px';
   img.srcset = srcset(s.e.cerca, DATA.vitrina.cerca.anchos);
+  img.decode().catch(() => {});
 }
 
 /* ---------- zoom in / out ---------- */
@@ -201,6 +208,8 @@ function open(i, from) {
   img.srcset = srcset(s.e.cerca, DATA.vitrina.cerca.anchos);
   img.src = `${ROOT}${s.e.cerca}-${DATA.vitrina.cerca.anchos[0]}.webp`;
   img.alt = `${s.p.nombre} de cerca (imagen demo hecha con IA)`;
+  img.decoding = 'async';
+  const decoded = img.decode().catch(() => {});
   $('#vtPanel').innerHTML = panelHTML(s.p);
 
   // bring the whole stage on screen first (the frame is sized to fit under the header)
@@ -214,11 +223,11 @@ function open(i, from) {
   $('#vtWorld').setAttribute('aria-hidden', 'true');
   const close = $('#vtClose');
   close.setAttribute('aria-hidden', 'false');
-  setTimeout(() => {
+  Promise.all([decoded, wait(reducedMotion() ? 0 : ZOOM.fadeDelayMs)]).then(() => {
     if (openIdx !== i) return;
     stage.classList.add('is-open');
     $('#vtX').focus({ preventScroll: true });
-  }, reducedMotion() ? 0 : ZOOM.fadeDelayMs);
+  });
 }
 
 function closeUp() {
@@ -229,7 +238,7 @@ function closeUp() {
   $('#vtWorld').style.transform = '';
   $('#vtWorld').removeAttribute('aria-hidden');
   $('#vtClose').setAttribute('aria-hidden', 'true');
-  setTimeout(() => { if (openIdx < 0) stage.classList.remove('is-zoomed'); }, reducedMotion() ? 0 : 750);
+  setTimeout(() => { if (openIdx < 0) stage.classList.remove('is-zoomed'); }, reducedMotion() ? 0 : ZOOM.closeMs);
   if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
   opener = null;
 }
@@ -274,6 +283,24 @@ function renderList() {
     </li>`).join('');
 }
 
+/* ---------- lights-on intro ---------- */
+
+async function lightsOn() {
+  const stage = $('#vtStage');
+  try { await $('#vtWall').decode(); } catch (e) { /* show the lamps anyway */ }
+  if (reducedMotion()) { stage.classList.remove('is-booting'); return; }
+  let k = 0;
+  SPOTS.forEach((s) => {
+    if (s.state !== 'on' || !s.el) return;
+    s.el.style.setProperty('--boot-d', ((k * ZOOM.bootStepMs + Math.random() * 120) / 1000).toFixed(2) + 's');
+    k++;
+  });
+  await wait(ZOOM.bootDarkMs);
+  stage.classList.add('is-lighting');
+  stage.classList.remove('is-booting');
+  setTimeout(() => stage.classList.remove('is-lighting'), 1500 + k * ZOOM.bootStepMs + 300);
+}
+
 /* ---------- boot ---------- */
 function renderAviso() {
   const aviso = DATA.vitrina.aviso || '';
@@ -291,8 +318,10 @@ async function init() {
     renderAviso();
     renderWall();
     renderList();
+    lightsOn();
   } catch (err) {
     console.error(err);
+    $('#vtStage').classList.remove('is-booting');
     const el = $('#vtError');
     el.hidden = false;
     el.textContent = 'No se pudo cargar la vitrina. Recarga la página o mira el catálogo.';

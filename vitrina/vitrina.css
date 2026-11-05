@@ -5,7 +5,15 @@
    Sizes inside the stage use cqw so everything scales with the wall.
    ========================================================== */
 
-.vt-body { --vt-ease: cubic-bezier(.65,0,.35,1); }
+.vt-body {
+  --vt-ease: cubic-bezier(.65,0,.35,1);
+  --vt-push: cubic-bezier(.5,0,.12,1);    /* camera push: gentle start, long soft landing */
+  --vt-settle: cubic-bezier(.2,.7,.15,1); /* close-up keeps drifting in after the cut */
+}
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 
 .vt-nav { margin-left: auto; display: flex; gap: 28px; }
 .vt-nav a {
@@ -14,48 +22,46 @@
 }
 .vt-nav a:hover, .vt-nav a[aria-current="page"] { border-bottom-color: var(--accent); }
 
-/* ---------- intro ---------- */
-.vt-intro { padding-top: 40px; padding-bottom: 24px; }
-.vt-title { font-size: clamp(2.4rem, 6vw, 4rem); letter-spacing: 1px; line-height: 1; margin-top: 6px; }
-.vt-help { color: var(--muted); margin-top: 10px; }
-.vt-help-touch { display: none; }
-@media (hover: none), (max-width: 699px) {
-  .vt-help-desk { display: none; }
-  .vt-help-touch { display: inline; }
-}
+/* ---------- demo notice (over the wall, bottom-left) ---------- */
 .vt-aviso {
-  margin-top: 16px; max-width: 72ch;
-  font-size: .9rem; line-height: 1.55; color: var(--muted);
-  padding: 10px 14px;
-  background: var(--surface);
+  position: absolute; z-index: 3; left: 1.4cqw; bottom: 1.2cqw;
+  max-width: min(560px, 46cqw);
+  font-size: .74rem; line-height: 1.45; color: rgba(245,245,245,.78);
+  padding: 8px 12px;
+  background: rgba(10,10,10,.72);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: 8px;
+  transition: opacity .35s ease;
 }
 .vt-aviso strong { color: var(--text); font-weight: 800; }
 .vt-aviso a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.vt-stage.is-zoomed .vt-aviso { opacity: 0; pointer-events: none; }
 
 /* ---------- stage ---------- */
-.vt-frame {   /* 1600 + gutters, and never taller than the screen under the header */
-  max-width: min(1648px, calc((100svh - var(--header-h) - 32px) * 4096 / 2294 + 2 * var(--gutter)));
+.vt-frame {   /* the wall is the page: as wide as fits under the header, centered */
+  width: min(100%, calc((100svh - var(--header-h)) * 4096 / 2294));
+  margin-inline: auto;
 }
 .vt-stage {
   position: relative;
   aspect-ratio: 4096 / 2294;
   overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--line);
   background: #070707;
   container-type: inline-size;
   isolation: isolate;
 }
+/* closing: the wall comes back while it pulls out */
 .vt-world {
   position: absolute; inset: 0;
   transform-origin: 0 0;
-  transition: transform .75s var(--vt-ease), opacity .35s ease .2s;
+  will-change: transform, opacity;
+  transition: transform 1s var(--vt-ease) .08s, opacity .5s ease .12s;
 }
-/* zoom in, then dip through black into the close-up (no ghosting between the two angles) */
-.vt-stage.is-zoomed .vt-world { opacity: 0; transition: transform .75s var(--vt-ease), opacity .28s ease .42s; }
+/* opening: slow camera push; the wall fades only in the last part, while the close-up arrives */
+.vt-stage.is-zoomed .vt-world {
+  opacity: 0;
+  transition: transform 1.1s var(--vt-push), opacity .5s ease .5s;
+}
 .vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .vt-spots { position: absolute; inset: 0; }
 
@@ -157,15 +163,16 @@
 }
 .vt-close-img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  transform: scale(1.05);
-  transition: transform .9s var(--vt-ease);
+  transform: scale(1.12);
+  will-change: transform;
+  transition: transform .6s ease;
 }
 .vt-close::after {   /* keeps the bottom bar readable over the photo */
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgba(10,10,10,.7), rgba(10,10,10,0) 30%);
 }
-.vt-stage.is-open .vt-close { opacity: 1; visibility: visible; transition: opacity .45s ease, visibility 0s; }
-.vt-stage.is-open .vt-close-img { transform: scale(1); }
+.vt-stage.is-open .vt-close { opacity: 1; visibility: visible; transition: opacity .55s ease, visibility 0s; }
+.vt-stage.is-open .vt-close-img { transform: scale(1); transition: transform 1.3s var(--vt-settle); }
 
 .vt-x {
   position: absolute; top: 2cqw; left: 2cqw; z-index: 2;
@@ -187,9 +194,9 @@
   border-radius: 12px;
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity .35s ease .2s, transform .45s var(--vt-ease) .2s;
+  transition: opacity .25s ease, transform .3s ease;
 }
-.vt-stage.is-open .vt-panel { opacity: 1; transform: none; }
+.vt-stage.is-open .vt-panel { opacity: 1; transform: none; transition: opacity .4s ease .45s, transform .6s var(--vt-settle) .45s; }
 .vt-panel-id { flex: 1 1 auto; min-width: 0; }
 .vt-panel .brand { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 .vt-panel-name { font-size: clamp(1.4rem, 2.2cqw, 2.2rem); letter-spacing: 1px; line-height: 1; margin-top: 2px; }
@@ -230,16 +237,35 @@
 .vt-card .vt-real { margin-top: 10px; }
 .vt-card .price { margin-top: 10px; }
 
-.vt-foot { padding-top: 40px; padding-bottom: 56px; color: var(--muted); font-size: .9rem; }
-.vt-foot a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+/* ---------- lights-on intro: lamps start off, in-stock ones flicker 3 times and stay on ---------- */
+.vt-stage.is-booting .vt-lamp,
+.vt-stage.is-booting .vt-pool { opacity: 0; transition: none; }
+.vt-stage.is-lighting .vt-spot[data-state="on"] .vt-lamp,
+.vt-stage.is-lighting .vt-spot[data-state="on"] .vt-pool {
+  animation: vt-flicker 1.5s step-end var(--boot-d, 0s) both;
+}
+@keyframes vt-flicker {   /* like a gallery tube catching: 3 short blinks, then steady */
+  0%   { opacity: 0; }
+  7%   { opacity: .85; }
+  11%  { opacity: 0; }
+  24%  { opacity: 1; }
+  29%  { opacity: .05; }
+  44%  { opacity: .9; }
+  49%  { opacity: 0; }
+  58%, 100% { opacity: 1; }
+}
 
 /* ---------- phones: wall as a cover, details as cards ---------- */
 @media (max-width: 699px) {
-  .vt-intro { padding-top: 28px; }
-  .vt-frame { padding-inline: 0; }
-  .vt-stage { border-radius: 0; border-inline: 0; }
+  .vt-frame { width: 100%; }
+  .vt-aviso {   /* too small over the wall on a phone: goes under it */
+    position: static; max-width: none; margin: 14px var(--gutter) 0;
+    font-size: .8rem; background: var(--surface);
+  }
+  .vt-stage { overflow: visible; aspect-ratio: auto; }
+  .vt-stage > .vt-world { position: relative; aspect-ratio: 4096 / 2294; }
   .vt-tag { display: none; }
-  .vt-spot[data-state="empty"] .vt-tag { display: flex; font-size: .55rem; letter-spacing: .1em; padding: 0; }
+  .vt-spot[data-state="empty"] .vt-tag { display: flex; font-size: .42rem; letter-spacing: .08em; padding: 0; }
   .vt-close { display: none; }
   .vt-list-wrap { display: block; margin-top: 20px; }
   .vt-nav { gap: 18px; }
@@ -250,4 +276,6 @@
   .vt-close { transition: opacity .2s linear, visibility 0s linear .2s; }
   .vt-stage.is-open .vt-close { transition: opacity .2s linear, visibility 0s; }
   .vt-close-img { transform: none; }
+  .vt-stage.is-lighting .vt-spot[data-state="on"] .vt-lamp,
+  .vt-stage.is-lighting .vt-spot[data-state="on"] .vt-pool { animation: none; }
 }

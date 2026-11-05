@@ -37,15 +37,10 @@
   </header>
 
   <main id="vitrina">
-    <section class="vt-intro container" aria-labelledby="vtTitle">
-      <p class="eyebrow">Vitrina</p>
-      <h1 class="vt-title" id="vtTitle">Teclados en exhibición</h1>
-      <p class="vt-help"><span class="vt-help-desk">Pasa el mouse para prender la lámpara y haz clic para verlo de cerca.</span><span class="vt-help-touch">Toca un teclado para ver sus detalles.</span></p>
-      <p class="vt-aviso" id="vtAviso" role="note"></p>
-    </section>
+    <h1 class="visually-hidden">Vitrina de teclados</h1>
 
-    <div class="vt-frame container">
-      <div class="vt-stage" id="vtStage">
+    <div class="vt-frame">
+      <div class="vt-stage is-booting" id="vtStage">
         <div class="vt-world" id="vtWorld">
           <img class="vt-wall" id="vtWall" alt="Muro de pegboard negro con bandejas y lámparas; en cuatro bandejas hay teclados en exhibición" width="4096" height="2294" decoding="async" fetchpriority="high">
           <div class="vt-spots" id="vtSpots"></div>
@@ -58,6 +53,8 @@
           </button>
           <div class="vt-panel" id="vtPanel" role="dialog" aria-modal="false" aria-labelledby="vtPanelName"></div>
         </div>
+
+        <p class="vt-aviso" id="vtAviso" role="note"></p>
       </div>
     </div>
 
@@ -67,10 +64,6 @@
 
     <p class="notice container" id="vtError" role="alert" hidden></p>
   </main>
-
-  <footer class="vt-foot container">
-    <p>¿Quieres ver fotos reales? <a href="/#catalogo">Ve al catálogo</a>.</p>
-  </footer>
 
   <script src="/vitrina/vitrina.js" defer></script>
 </body>
