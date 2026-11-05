@@ -123,7 +123,7 @@ function renderWall() {
       : `<b>${esc(p.nombre)}</b>${shortPrice(p) ? `<span class="vt-tag-price">${shortPrice(p)}</span>` : ''}`;
     const label = `${p.nombre}${state === 'off' ? ', agotado' : ''}. Ver de cerca`;
     return `<div class="vt-spot" data-state="${state}" data-i="${i}" style="${vars}">
-        ${state === 'off' ? '<div class="vt-dim"></div>' : '<div class="vt-pool"></div>'}
+        ${state === 'off' ? '<div class="vt-dim"></div>' : ''}<div class="vt-tint"></div><div class="vt-pool"></div>
         <div class="vt-lamp"></div>
         <button class="vt-slot" type="button" data-i="${i}" aria-label="${esc(label)}"></button>
         <span class="vt-tag" aria-hidden="true">${tag}</span>

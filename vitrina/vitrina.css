@@ -65,18 +65,10 @@
 .vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .vt-spots { position: absolute; inset: 0; }
 
-/* ---------- the wall's baked top light, toned down (it read as one big lamp above) ---------- */
-.vt-shade {
-  position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 48% 34% at 50% 0%, rgba(0,0,0,.5), rgba(0,0,0,.22) 60%, transparent 100%),
-    linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,.12) 16%, transparent 26%);
-}
-
 /* ---------- neon sign: the Flick symbol as tubes, top of the wall ---------- */
 .vt-neon {
-  position: absolute; left: 50%; top: 2.6%;
-  width: 7.4cqw; transform: translateX(-50%);
+  position: absolute; left: 50%; top: .9%;
+  width: 9.2cqw; transform: translateX(-50%);
   pointer-events: none;
   --tube: #46E3DF; --core: #EAFFFE; --glow: rgba(44,180,178,.95);
 }
@@ -108,17 +100,42 @@
   41%, 100% { opacity: 1; }
 }
 
-/* each spot: lamp light + optional pool / dim + click area + tag */
+/* each spot: lamp + light pool on the keyboard + dim (sold out) + click area + tag.
+   Three states that must read clearly apart:
+     sold out ......... no light, keyboard in the dark
+     in stock ......... soft warm-white light
+     hover ............ strong brand light: teal if in stock, orange if sold out
+   Colors are registered so the gradients fade between states instead of jumping. */
+@property --lamp-c { syntax: '<color>'; inherits: true; initial-value: transparent; }
+@property --cone-c { syntax: '<color>'; inherits: true; initial-value: transparent; }
+@property --pool-c { syntax: '<color>'; inherits: true; initial-value: transparent; }
+@property --tint-c { syntax: '<color>'; inherits: true; initial-value: transparent; }
 .vt-spot {
-  --lamp-c: rgba(255,233,204,.95);
-  --cone-c: rgba(255,229,192,.15);
-  --pool-c: rgba(255,236,214,.10);
-  --lamp-o: 1;
+  --lamp-c: rgba(255,236,214,.8);
+  --cone-c: rgba(255,232,200,.08);
+  --pool-c: rgba(255,238,220,.06);
+  --tint-c: rgba(255,255,255,0);
+  --lamp-o: 1; --pool-o: 1; --dim-o: 0;
+  --glow: .7cqw;
+  transition: --lamp-c .35s ease, --cone-c .35s ease, --pool-c .35s ease, --tint-c .35s ease;
 }
-.vt-spot.is-hot { --lamp-c: rgba(44,180,178,1); --cone-c: rgba(44,180,178,.22); --pool-c: rgba(44,180,178,.14); }
-.vt-spot[data-state="off"] { --lamp-o: 0; }
-.vt-spot[data-state="off"].is-hot { --lamp-o: .55; }
-.vt-spot[data-state="empty"] { --lamp-o: 0; }
+.vt-spot.is-hot {
+  --lamp-c: rgba(70,227,223,1);
+  --cone-c: rgba(44,180,178,.55);
+  --pool-c: rgba(44,180,178,.38);
+  --tint-c: rgba(110,230,225,.6);   /* colors the keycaps themselves, not just the air */
+  --glow: 1.8cqw;
+}
+.vt-spot[data-state="off"] { --lamp-o: 0; --pool-o: 0; --dim-o: 1; }
+.vt-spot[data-state="off"].is-hot {
+  --lamp-c: rgba(255,150,80,1);
+  --cone-c: rgba(252,133,57,.5);
+  --pool-c: rgba(252,133,57,.32);
+  --tint-c: rgba(255,175,120,.6);
+  --glow: 1.8cqw;
+  --lamp-o: 1; --pool-o: 1; --dim-o: .25;
+}
+.vt-spot[data-state="empty"] { --lamp-o: 0; --pool-o: 0; }
 
 .vt-lamp {
   position: absolute;
@@ -132,31 +149,37 @@
   content: ''; position: absolute; left: 1.5%; right: 1.5%; top: .12cqw;
   height: .22cqw; border-radius: 99px;
   background: var(--lamp-c);
-  box-shadow: 0 0 .9cqw .2cqw var(--lamp-c);
-  transition: background-color .35s ease, box-shadow .35s ease;
+  box-shadow: 0 0 var(--glow) .2cqw var(--lamp-c);
+  transition: box-shadow .35s ease;
 }
 /* the cone of light falling onto the keyboard: soft on every edge, no hard box */
 .vt-lamp::after {
   content: ''; position: absolute; left: -10%; right: -10%; top: .3cqw;
   height: var(--cone-h, 10cqw);
-  background: radial-gradient(ellipse 50% 100% at 50% 0, var(--cone-c), transparent 78%);
+  background: radial-gradient(ellipse 50% 100% at 50% 0, var(--cone-c), transparent 80%);
   mix-blend-mode: screen;
-  transition: background .35s ease;
 }
 
-.vt-pool, .vt-dim {
+.vt-pool, .vt-dim, .vt-tint {
   position: absolute;
-  left: calc(var(--x) - 2%); top: calc(var(--y) - 3%);
-  width: calc(var(--w) + 4%); height: calc(var(--h) + 6%);
+  left: calc(var(--x) - 3%); top: calc(var(--y) - 4%);
+  width: calc(var(--w) + 6%); height: calc(var(--h) + 8%);
   pointer-events: none;
 }
 .vt-pool {
-  background: radial-gradient(ellipse 60% 70% at 50% 25%, var(--pool-c), transparent 72%);
+  background: radial-gradient(ellipse 58% 66% at 50% 30%, var(--pool-c), transparent 74%);
   mix-blend-mode: screen;
-  transition: background .35s ease;
+  opacity: var(--pool-o);
+  transition: opacity .35s ease;
+}
+.vt-tint {   /* multiply: white keycaps under a teal lamp turn teal */
+  background: radial-gradient(ellipse 62% 70% at 50% 35%, var(--tint-c), transparent 78%);
+  mix-blend-mode: multiply;
 }
 .vt-dim {
-  background: radial-gradient(ellipse 58% 62% at 50% 50%, rgba(0,0,0,.5), rgba(0,0,0,.38) 55%, transparent 78%);
+  background: radial-gradient(ellipse 56% 60% at 50% 50%, rgba(0,0,0,.72), rgba(0,0,0,.6) 55%, transparent 80%);
+  opacity: var(--dim-o);
+  transition: opacity .35s ease;
 }
 
 .vt-slot {
