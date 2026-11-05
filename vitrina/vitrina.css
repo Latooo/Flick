@@ -65,25 +65,32 @@
 .vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .vt-spots { position: absolute; inset: 0; }
 
-/* ---------- neon sign (Flick logo as tubes, top of the wall) ---------- */
+/* ---------- the wall's baked top light, toned down (it read as one big lamp above) ---------- */
+.vt-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 48% 34% at 50% 0%, rgba(0,0,0,.5), rgba(0,0,0,.22) 60%, transparent 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,.12) 16%, transparent 26%);
+}
+
+/* ---------- neon sign: the Flick symbol as tubes, top of the wall ---------- */
 .vt-neon {
-  position: absolute; left: 50%; top: 3.2%;
-  width: 21cqw; transform: translateX(-50%);
+  position: absolute; left: 50%; top: 2.6%;
+  width: 7.4cqw; transform: translateX(-50%);
   pointer-events: none;
   --tube: #46E3DF; --core: #EAFFFE; --glow: rgba(44,180,178,.95);
 }
 .vt-neon-svg { position: relative; display: block; width: 100%; height: auto; overflow: visible; }
-#vtNeonShape path { stroke-width: var(--nw, 12); }
-#vtNeonShape .sym path { stroke-width: calc(var(--nw, 12) / .75); }   /* the symbol group is drawn at 75% */
-.vt-neon-glass { --nw: 15; stroke: rgba(150,170,170,.16); }          /* unlit glass tubes */
-.vt-neon-tube  { --nw: 15; stroke: var(--tube); }
-.vt-neon-core  { --nw: 5;  stroke: var(--core); }
+#vtNeonShape path { stroke-width: var(--nw, 18); }
+.vt-neon-glass { --nw: 20; stroke: rgba(150,170,170,.16); }          /* unlit glass tubes */
+.vt-neon-tube  { --nw: 20; stroke: var(--tube); }
+.vt-neon-core  { --nw: 7;  stroke: var(--core); }
 .vt-neon-lit {
-  filter: drop-shadow(0 0 .25cqw var(--glow)) drop-shadow(0 0 .9cqw var(--glow)) drop-shadow(0 0 2.2cqw rgba(44,180,178,.55));
+  filter: drop-shadow(0 0 .2cqw var(--glow)) drop-shadow(0 0 .7cqw var(--glow)) drop-shadow(0 0 1.6cqw rgba(44,180,178,.5));
 }
-.vt-neon-spill {   /* teal light on the pegboard around the sign */
-  position: absolute; left: -35%; right: -35%; top: -60%; bottom: -90%;
-  background: radial-gradient(ellipse 50% 50% at 50% 45%, rgba(44,180,178,.28), rgba(44,180,178,.08) 55%, transparent 75%);
+.vt-neon-spill {   /* a little teal on the pegboard right around the sign */
+  position: absolute; left: -45%; right: -45%; top: -35%; bottom: -35%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(44,180,178,.16), rgba(44,180,178,.05) 55%, transparent 75%);
   mix-blend-mode: screen;
 }
 .vt-stage.is-booting .vt-neon-lit,
