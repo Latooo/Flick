@@ -147,7 +147,7 @@ function setupAnnounceHeight() {
 function renderNav(categorias) {
   $('#mainNav').innerHTML = categorias
     .map((c) => `<a href="#catalogo" data-cat="${esc(c.id)}">${esc(c.nombre)}</a>`)
-    .join('');
+    .join('') + (DATA.vitrina ? '<a href="vitrina/">Vitrina</a>' : '');
 }
 
 function renderSocials(sitio) {
@@ -412,11 +412,29 @@ function setCategory(id) {
   activeCat = id;
   document.querySelectorAll('#filters .filter').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cat === id)));
   renderGrid();
+  renderVitrinaLink();
+}
+
+// "Ver la vitrina" only under the Teclados filter, and only if productos.json has a vitrina
+function renderVitrinaLink() {
+  const a = $('#vitrinaLink');
+  if (a) a.hidden = !(DATA.vitrina && activeCat === 'teclados');
+}
+
+// /#producto=<id> (used by the vitrina's "Ver fotos reales") opens that product's modal
+function openFromHash() {
+  const m = /^#producto=(.+)$/.exec(location.hash);
+  if (!m) return;
+  const id = decodeURIComponent(m[1]);
+  if (!byId(id)) return;
+  const card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  openModal(id, card);
 }
 
 function setupCatalog() {
   renderFilters();
   renderGrid();
+  renderVitrinaLink();
   $('#filters').addEventListener('click', (e) => {
     const b = e.target.closest('.filter');
     if (b) setCategory(b.dataset.cat);
@@ -999,6 +1017,8 @@ async function init() {
       renderDelivery(DATA.sitio.entrega);
       renderFooter(DATA.sitio);
       setupCatalog();
+      openFromHash();
+      window.addEventListener('hashchange', openFromHash);
     } catch (err) {
       console.error(err);
       showError();

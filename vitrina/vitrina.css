@@ -1,0 +1,253 @@
+/* ==========================================================
+   Vitrina de teclados (/vitrina/) — sits on top of ../styles.css
+   Positions come from productos.json "vitrina" as % of the wall,
+   set per spot as --x --y --w --h (box) and --lx --ly --lw (lamp).
+   Sizes inside the stage use cqw so everything scales with the wall.
+   ========================================================== */
+
+.vt-body { --vt-ease: cubic-bezier(.65,0,.35,1); }
+
+.vt-nav { margin-left: auto; display: flex; gap: 28px; }
+.vt-nav a {
+  font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--accent); padding: 4px 0; border-bottom: 2px solid transparent; transition: var(--transition);
+}
+.vt-nav a:hover, .vt-nav a[aria-current="page"] { border-bottom-color: var(--accent); }
+
+/* ---------- intro ---------- */
+.vt-intro { padding-top: 40px; padding-bottom: 24px; }
+.vt-title { font-size: clamp(2.4rem, 6vw, 4rem); letter-spacing: 1px; line-height: 1; margin-top: 6px; }
+.vt-help { color: var(--muted); margin-top: 10px; }
+.vt-help-touch { display: none; }
+@media (hover: none), (max-width: 699px) {
+  .vt-help-desk { display: none; }
+  .vt-help-touch { display: inline; }
+}
+.vt-aviso {
+  margin-top: 16px; max-width: 72ch;
+  font-size: .9rem; line-height: 1.55; color: var(--muted);
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.vt-aviso strong { color: var(--text); font-weight: 800; }
+.vt-aviso a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- stage ---------- */
+.vt-frame {   /* 1600 + gutters, and never taller than the screen under the header */
+  max-width: min(1648px, calc((100svh - var(--header-h) - 32px) * 4096 / 2294 + 2 * var(--gutter)));
+}
+.vt-stage {
+  position: relative;
+  aspect-ratio: 4096 / 2294;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #070707;
+  container-type: inline-size;
+  isolation: isolate;
+}
+.vt-world {
+  position: absolute; inset: 0;
+  transform-origin: 0 0;
+  transition: transform .75s var(--vt-ease), opacity .35s ease .2s;
+}
+/* zoom in, then dip through black into the close-up (no ghosting between the two angles) */
+.vt-stage.is-zoomed .vt-world { opacity: 0; transition: transform .75s var(--vt-ease), opacity .28s ease .42s; }
+.vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.vt-spots { position: absolute; inset: 0; }
+
+/* each spot: lamp light + optional pool / dim + click area + tag */
+.vt-spot {
+  --lamp-c: rgba(255,233,204,.95);
+  --cone-c: rgba(255,229,192,.15);
+  --pool-c: rgba(255,236,214,.10);
+  --lamp-o: 1;
+}
+.vt-spot.is-hot { --lamp-c: rgba(44,180,178,1); --cone-c: rgba(44,180,178,.22); --pool-c: rgba(44,180,178,.14); }
+.vt-spot[data-state="off"] { --lamp-o: 0; }
+.vt-spot[data-state="off"].is-hot { --lamp-o: .55; }
+.vt-spot[data-state="empty"] { --lamp-o: 0; }
+
+.vt-lamp {
+  position: absolute;
+  left: var(--lx); top: var(--ly); width: var(--lw); height: 0;
+  pointer-events: none;
+  opacity: var(--lamp-o);
+  transition: opacity .35s ease;
+}
+/* the lit underside of the bar */
+.vt-lamp::before {
+  content: ''; position: absolute; left: 1.5%; right: 1.5%; top: .12cqw;
+  height: .22cqw; border-radius: 99px;
+  background: var(--lamp-c);
+  box-shadow: 0 0 .9cqw .2cqw var(--lamp-c);
+  transition: background-color .35s ease, box-shadow .35s ease;
+}
+/* the cone of light falling onto the keyboard: soft on every edge, no hard box */
+.vt-lamp::after {
+  content: ''; position: absolute; left: -10%; right: -10%; top: .3cqw;
+  height: var(--cone-h, 10cqw);
+  background: radial-gradient(ellipse 50% 100% at 50% 0, var(--cone-c), transparent 78%);
+  mix-blend-mode: screen;
+  transition: background .35s ease;
+}
+
+.vt-pool, .vt-dim {
+  position: absolute;
+  left: calc(var(--x) - 2%); top: calc(var(--y) - 3%);
+  width: calc(var(--w) + 4%); height: calc(var(--h) + 6%);
+  pointer-events: none;
+}
+.vt-pool {
+  background: radial-gradient(ellipse 60% 70% at 50% 25%, var(--pool-c), transparent 72%);
+  mix-blend-mode: screen;
+  transition: background .35s ease;
+}
+.vt-dim {
+  background: radial-gradient(ellipse 58% 62% at 50% 50%, rgba(0,0,0,.5), rgba(0,0,0,.38) 55%, transparent 78%);
+}
+
+.vt-slot {
+  position: absolute;
+  left: var(--x); top: var(--y); width: var(--w); height: var(--h);
+  padding: 0; border: 0; background: transparent;
+  border-radius: .6cqw;
+  cursor: pointer;
+}
+.vt-slot:focus-visible { outline: 2px solid var(--accent); outline-offset: .4cqw; }
+
+.vt-tag {
+  position: absolute;
+  left: calc(var(--x) + var(--w) / 2); top: calc(var(--y) + var(--h) + 1.6%);
+  transform: translate(-50%, 4px);
+  display: flex; align-items: baseline; gap: 10px; white-space: nowrap;
+  padding: 6px 12px;
+  font-family: var(--font-mono); font-size: clamp(.68rem, .95cqw, .9rem); letter-spacing: .02em;
+  color: var(--text);
+  background: rgba(10,10,10,.88);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.vt-tag b { font-weight: 700; }
+.vt-tag .vt-tag-price { color: var(--hot); }
+.vt-tag .vt-tag-out { color: var(--muted); text-transform: uppercase; font-size: .9em; }
+.vt-spot.is-hot .vt-tag { opacity: 1; transform: translate(-50%, 0); }
+.vt-spot[data-state="empty"] .vt-tag {
+  opacity: .7; transform: translate(-50%, 0);
+  top: calc(var(--y) + var(--h) * .38);
+  background: transparent; border-color: transparent;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .14em;
+}
+
+/* zoomed: the wall stops reacting */
+.vt-stage.is-zoomed .vt-spots { pointer-events: none; }
+.vt-stage.is-zoomed .vt-tag { opacity: 0 !important; }
+
+/* ---------- close-up ---------- */
+.vt-close {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden;
+  transition: opacity .45s ease, visibility 0s linear .45s;
+}
+.vt-close-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.05);
+  transition: transform .9s var(--vt-ease);
+}
+.vt-close::after {   /* keeps the bottom bar readable over the photo */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(10,10,10,.7), rgba(10,10,10,0) 30%);
+}
+.vt-stage.is-open .vt-close { opacity: 1; visibility: visible; transition: opacity .45s ease, visibility 0s; }
+.vt-stage.is-open .vt-close-img { transform: scale(1); }
+
+.vt-x {
+  position: absolute; top: 2cqw; left: 2cqw; z-index: 2;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(10,10,10,.8); border: 1px solid var(--line-strong);
+  transition: var(--transition);
+}
+.vt-x:hover, .vt-x:focus-visible { border-color: var(--accent); color: var(--accent); }
+.vt-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.vt-panel {   /* bar over the free strip under the keyboard (bottom ~20% of every close-up) */
+  position: absolute; z-index: 2;
+  left: 2cqw; right: 2cqw; bottom: 1.6cqw;
+  display: flex; align-items: center; gap: 2cqw;
+  padding: 14px 18px;
+  background: rgba(14,14,14,.92);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .35s ease .2s, transform .45s var(--vt-ease) .2s;
+}
+.vt-stage.is-open .vt-panel { opacity: 1; transform: none; }
+.vt-panel-id { flex: 1 1 auto; min-width: 0; }
+.vt-panel .brand { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.vt-panel-name { font-size: clamp(1.4rem, 2.2cqw, 2.2rem); letter-spacing: 1px; line-height: 1; margin-top: 2px; }
+.vt-panel .agotado-tag { margin-left: 8px; font-size: .75rem; }
+.vt-panel .lead { font-size: .9rem; line-height: 1.4; margin-top: 4px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-panel .price { margin-top: 0; flex: none; }
+.vt-panel-actions { flex: none; display: flex; gap: 10px; align-items: center; }
+.vt-panel .btn-wa { width: auto; margin-top: 0; font-size: 1.15rem; padding: 11px 20px; }
+.vt-panel .vt-real { width: auto; margin-top: 0; }
+.vt-panel-note { position: absolute; right: 2cqw; bottom: calc(100% + 8px); font-size: .72rem; color: rgba(245,245,245,.75); text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+.vt-real {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 10px; padding: 10px 16px;
+  font-family: var(--font-display); font-size: 1.15rem; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(44,180,178,.45); border-radius: var(--radius);
+  transition: var(--transition);
+}
+.vt-real:hover, .vt-real:focus-visible { border-color: var(--accent); background: rgba(44,180,178,.08); }
+
+/* ---------- list (phones only) ---------- */
+.vt-list-wrap { display: none; }
+.vt-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  scroll-margin-top: calc(var(--header-h) + 12px);
+}
+.vt-card + .vt-card { margin-top: 16px; }
+.vt-card-media { position: relative; aspect-ratio: 2000 / 1116; background: #070707; }
+.vt-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.vt-card.is-off .vt-card-media img { filter: brightness(.6); }
+.vt-card-body { padding: 16px; }
+.vt-card-name { font-size: 1.8rem; letter-spacing: 1px; line-height: 1; margin-top: 2px; }
+.vt-card .brand { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.vt-card .btn-wa { margin-top: 16px; font-size: 1.2rem; padding: 12px 20px; }
+.vt-card .vt-real { margin-top: 10px; }
+.vt-card .price { margin-top: 10px; }
+
+.vt-foot { padding-top: 40px; padding-bottom: 56px; color: var(--muted); font-size: .9rem; }
+.vt-foot a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- phones: wall as a cover, details as cards ---------- */
+@media (max-width: 699px) {
+  .vt-intro { padding-top: 28px; }
+  .vt-frame { padding-inline: 0; }
+  .vt-stage { border-radius: 0; border-inline: 0; }
+  .vt-tag { display: none; }
+  .vt-spot[data-state="empty"] .vt-tag { display: flex; font-size: .55rem; letter-spacing: .1em; padding: 0; }
+  .vt-close { display: none; }
+  .vt-list-wrap { display: block; margin-top: 20px; }
+  .vt-nav { gap: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-world, .vt-close-img, .vt-panel, .vt-tag, .vt-lamp, .vt-lamp::before, .vt-lamp::after, .vt-pool { transition: none !important; }
+  .vt-close { transition: opacity .2s linear, visibility 0s linear .2s; }
+  .vt-stage.is-open .vt-close { transition: opacity .2s linear, visibility 0s; }
+  .vt-close-img { transform: none; }
+}

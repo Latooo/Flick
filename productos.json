@@ -61,6 +61,59 @@
       "nombre": "Mouse Pad"
     }
   ],
+  "vitrina": {
+    "_nota": "Vitrina de teclados (/vitrina/). caja = [x, y, ancho, alto] y lampara = [x, y, ancho], en % del muro. producto null = Próximamente. Agotado y precio salen del producto.",
+    "aviso": "Vitrina demo · Las imágenes de esta sección están hechas con IA a partir de fotos reales de nuestros productos y pueden tener pequeñas diferencias con el producto. Mirá las fotos reales en el catálogo.",
+    "muro": {
+      "src": "img/vitrina/muro",
+      "anchos": [1400, 2400, 4096],
+      "ancho": 4096,
+      "alto": 2294
+    },
+    "cerca": {
+      "anchos": [1200, 2000],
+      "ancho": 2000,
+      "alto": 1116
+    },
+    "espacios": [
+      {
+        "producto": "aula-f99-pro",
+        "caja": [9.07, 26.5, 26.07, 17.41],
+        "lampara": [12.29, 18.57, 19.14],
+        "cerca": "img/vitrina/cerca-aula-f99-pro"
+      },
+      {
+        "producto": "aula-f87-pro",
+        "caja": [37.71, 27.02, 25.43, 17.03],
+        "lampara": [40.36, 18.57, 19.14],
+        "cerca": "img/vitrina/cerca-aula-f87-pro"
+      },
+      {
+        "producto": "as-x68he",
+        "caja": [66.43, 29.19, 23.57, 14.72],
+        "lampara": [68.43, 18.57, 19.21],
+        "cerca": "img/vitrina/cerca-as-x68he"
+      },
+      {
+        "producto": "as-m86",
+        "caja": [11.21, 56.85, 23.21, 18.69],
+        "lampara": [12.29, 54.29, 19.14],
+        "cerca": "img/vitrina/cerca-as-m86"
+      },
+      {
+        "producto": null,
+        "caja": [41.21, 65.94, 17.5, 9.6],
+        "lampara": [40.36, 54.29, 19.14],
+        "cerca": null
+      },
+      {
+        "producto": null,
+        "caja": [67.86, 65.94, 17.71, 9.6],
+        "lampara": [68.43, 54.29, 19.21],
+        "cerca": null
+      }
+    ]
+  },
   "productos": [
     {
       "id": "as-x3",

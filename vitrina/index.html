@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es" data-root="/">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vitrina de teclados — Flick</title>
+  <meta name="description" content="Los teclados de Flick en una vitrina: pasa el mouse para prender la lámpara y haz clic para verlos de cerca. Pago contraentrega en Bucaramanga.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Flick">
+  <meta property="og:title" content="Vitrina de teclados — Flick">
+  <meta property="og:description" content="Los teclados de Flick en una vitrina. Imágenes demo hechas con IA a partir de fotos reales.">
+  <meta property="og:url" content="https://flickcol.netlify.app/vitrina/">
+  <meta property="og:image" content="https://flickcol.netlify.app/img/vitrina/muro-1400.webp">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="preconnect" href="https://nisegpuyvfujzrcjlhtw.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/marca/flick-simbolo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/img/marca/apple-touch-icon.png">
+  <link rel="preload" as="image" href="/img/vitrina/muro-2400.webp" imagesrcset="/img/vitrina/muro-1400.webp 1400w, /img/vitrina/muro-2400.webp 2400w, /img/vitrina/muro-4096.webp 4096w" imagesizes="(max-width: 1600px) 100vw, 1600px">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/vitrina/vitrina.css">
+</head>
+<body class="vt-body">
+  <a class="skip-link" href="#vitrina">Saltar a la vitrina</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/" aria-label="Flick, inicio"><img class="brand-disc" src="/img/marca/flick-simbolo.svg" alt="" aria-hidden="true" width="40" height="40"><span class="logo-letters" aria-hidden="true"><span>F</span><span class="logo-l">L</span><span class="logo-i">I</span><span class="logo-c">C</span><span class="logo-k">K</span></span></a>
+      <nav class="vt-nav" aria-label="Secciones">
+        <a href="/#catalogo">Catálogo</a>
+        <a href="/vitrina/" aria-current="page">Vitrina</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="vitrina">
+    <section class="vt-intro container" aria-labelledby="vtTitle">
+      <p class="eyebrow">Vitrina</p>
+      <h1 class="vt-title" id="vtTitle">Teclados en exhibición</h1>
+      <p class="vt-help"><span class="vt-help-desk">Pasa el mouse para prender la lámpara y haz clic para verlo de cerca.</span><span class="vt-help-touch">Toca un teclado para ver sus detalles.</span></p>
+      <p class="vt-aviso" id="vtAviso" role="note"></p>
+    </section>
+
+    <div class="vt-frame container">
+      <div class="vt-stage" id="vtStage">
+        <div class="vt-world" id="vtWorld">
+          <img class="vt-wall" id="vtWall" alt="Muro de pegboard negro con bandejas y lámparas; en cuatro bandejas hay teclados en exhibición" width="4096" height="2294" decoding="async" fetchpriority="high">
+          <div class="vt-spots" id="vtSpots"></div>
+        </div>
+
+        <div class="vt-close" id="vtClose" aria-hidden="true">
+          <img class="vt-close-img" id="vtCloseImg" alt="">
+          <button class="vt-x" id="vtX" type="button" aria-label="Volver al muro">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div class="vt-panel" id="vtPanel" role="dialog" aria-modal="false" aria-labelledby="vtPanelName"></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="vt-list-wrap container" aria-label="Teclados de la vitrina">
+      <ul class="vt-list" id="vtList"></ul>
+    </section>
+
+    <p class="notice container" id="vtError" role="alert" hidden></p>
+  </main>
+
+  <footer class="vt-foot container">
+    <p>¿Quieres ver fotos reales? <a href="/#catalogo">Ve al catálogo</a>.</p>
+  </footer>
+
+  <script src="/vitrina/vitrina.js" defer></script>
+</body>
+</html>
