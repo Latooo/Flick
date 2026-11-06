@@ -62,14 +62,14 @@
     }
   ],
   "vitrina": {
-    "_nota": "Vitrina de teclados (/vitrina/). caja = [x, y, ancho, alto] y lampara = [x, y, ancho], en % del muro. producto null = Próximamente. Agotado y precio salen del producto.",
+    "_nota": "Vitrina de teclados (/vitrina/). muro.escena = [x, y, ancho, alto] de la escena original dentro de la imagen completa (pegboard extendido alrededor), en %. caja = [x, y, ancho, alto] y lampara = [x, y, ancho], en % de la escena. producto null = Próximamente. Agotado y precio salen del producto.",
     "aviso": "Vitrina demo · Las imágenes de esta sección están hechas con IA a partir de fotos reales de nuestros productos y pueden tener pequeñas diferencias con el producto. Mirá las fotos reales en el catálogo.",
     "muro": {
       "src": "img/vitrina/muro",
       "anchos": [1800, 3200, 5352],
-      "ancho": 5354,
-      "alto": 2294,
-      "contenido": [11.75, 76.5]
+      "ancho": 5352,
+      "alto": 4282,
+      "escena": [11.748, 23.226, 76.504, 53.548]
     },
     "cerca": {
       "anchos": [1200, 2000],
@@ -79,38 +79,38 @@
     "espacios": [
       {
         "producto": "aula-f99-pro",
-        "caja": [18.69, 26.5, 19.94, 17.41],
-        "lampara": [21.15, 18.57, 14.64],
+        "caja": [9.07, 26.5, 26.07, 17.41],
+        "lampara": [12.29, 18.57, 19.14],
         "cerca": "img/vitrina/cerca-aula-f99-pro"
       },
       {
         "producto": "aula-f87-pro",
-        "caja": [40.6, 27.02, 19.45, 17.03],
-        "lampara": [42.63, 18.57, 14.64],
+        "caja": [37.71, 27.02, 25.43, 17.03],
+        "lampara": [40.36, 18.57, 19.14],
         "cerca": "img/vitrina/cerca-aula-f87-pro"
       },
       {
         "producto": "as-x68he",
-        "caja": [62.57, 29.19, 18.03, 14.72],
-        "lampara": [64.1, 18.57, 14.7],
+        "caja": [66.43, 29.19, 23.57, 14.72],
+        "lampara": [68.43, 18.57, 19.21],
         "cerca": "img/vitrina/cerca-as-x68he"
       },
       {
         "producto": "as-m86",
-        "caja": [20.32, 56.85, 17.76, 18.69],
-        "lampara": [21.15, 54.29, 14.64],
+        "caja": [11.21, 56.85, 23.21, 18.69],
+        "lampara": [12.29, 54.29, 19.14],
         "cerca": "img/vitrina/cerca-as-m86"
       },
       {
         "producto": null,
-        "caja": [43.28, 65.94, 13.39, 9.6],
-        "lampara": [42.63, 54.29, 14.64],
+        "caja": [41.21, 65.94, 17.5, 9.6],
+        "lampara": [40.36, 54.29, 19.14],
         "cerca": null
       },
       {
         "producto": null,
-        "caja": [63.66, 65.94, 13.55, 9.6],
-        "lampara": [64.1, 54.29, 14.7],
+        "caja": [67.86, 65.94, 17.71, 9.6],
+        "lampara": [68.43, 54.29, 19.21],
         "cerca": null
       }
     ]

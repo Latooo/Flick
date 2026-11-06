@@ -1,8 +1,9 @@
 /* ==========================================================
    Vitrina de teclados (/vitrina/) — sits on top of ../styles.css
-   Positions come from productos.json "vitrina" as % of the wall,
+   Positions come from productos.json "vitrina" as % of the scene
+   (the original 16:9 shot inside the bigger pegboard image),
    set per spot as --x --y --w --h (box) and --lx --ly --lw (lamp).
-   Sizes inside the stage use cqw so everything scales with the wall.
+   Sizes inside the scene use cqw so everything scales with it.
    ========================================================== */
 
 .vt-body {
@@ -16,25 +17,32 @@
 }
 
 /* ---------- stage: the whole screen is the wall ----------
-   The wall image is 21:9 (the original 16:9 scene plus pegboard extended on both sides).
-   --h keeps the original scene (76.5% of the width, ratio 1.7855) always fully visible;
-   on wider screens the extended sides fill in, so there are no black bars. */
+   The wall image is the original 16:9 scene with pegboard extended all around it
+   (muro.escena in productos.json says where the scene sits; vitrina.js copies it to
+   --ratio --sx --sy --sw --sh, the values below are the same as a fallback).
+   --h makes the scene as big as fits on screen, centered; the extra pegboard covers the
+   rest, so the background is always pegboard.
+   Very wide screens (> ~2.33): the image still covers the width, trimming up to 15% of the
+   scene's height (top/bottom are empty pegboard). Portrait screens: the stage is never taller
+   than the image (104vw). */
 .vt-frame { position: relative; }
 .vt-stage {
   position: relative;
-  height: 100vh; height: 100svh;
+  height: min(100vh, 104vw); height: min(100svh, 104vw);
   overflow: hidden;
   background: #050505;
   container-type: size;
   isolation: isolate;
 }
 .vt-world {
-  --ratio: 2.3341;   /* 5352 / 2293, full image */
-  --h: min(100cqh, calc(100cqw / 1.7855));
+  --ratio: 1.24988;                 /* full image, 5352 / 4282 */
+  --sx: 11.748; --sy: 23.226;       /* scene inside the image, % */
+  --sw: 76.504; --sh: 53.548;
+  --fit: min(calc(100cqh * 100 / var(--sh)), calc(100cqw * 100 / (var(--sw) * var(--ratio))));
+  --h: max(var(--fit), min(calc(100cqw / var(--ratio)), calc(var(--fit) * 1.15)));
   position: absolute;
   width: calc(var(--h) * var(--ratio)); height: var(--h);
   left: calc(50% - var(--h) * var(--ratio) / 2); top: calc(50% - var(--h) / 2);
-  container-type: size;   /* cqw inside the wall = % of the wall, so lamps and neon scale with it */
   transform-origin: 0 0;
   will-change: transform, opacity;
   transition: transform 1s var(--vt-ease) .08s, opacity .5s ease .12s;   /* closing */
@@ -44,15 +52,22 @@
   opacity: 0;
   transition: transform 1.1s var(--vt-push), opacity .5s ease .5s;
 }
-.vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.vt-wall { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.vt-scene {
+  position: absolute;
+  left: calc(var(--sx) * 1%); top: calc(var(--sy) * 1%);
+  width: calc(var(--sw) * 1%); height: calc(var(--sh) * 1%);
+  container-type: size;   /* cqw inside = % of the scene, so lamps, neon and labels scale with it */
+}
 .vt-spots { position: absolute; inset: 0; }
 
-/* ---------- back to the catalog: orange neon, top-left of the screen ---------- */
+/* ---------- top band of the wall, beside the neon logo:
+   back to the catalog on the left, the demo notice on the right ---------- */
 .vt-back {
   position: absolute; z-index: 3;
-  left: max(20px, 2.2cqw); top: max(18px, 3cqh);
-  width: clamp(130px, 11cqw, 230px);
-  padding: 6px;
+  right: calc(50% + 7.4cqw); top: 7.2%;
+  width: 12.5cqw;
+  padding: .4cqw;
   border-radius: 8px;
   --tube: #FFA36B; --core: #FFF2E8; --glow: rgba(252,133,57,.95);
   transition: transform .25s ease, opacity .35s ease;
@@ -63,51 +78,51 @@
 .vt-back .vt-neon-tube  { --nw: 11; stroke: var(--tube); }
 .vt-back .vt-neon-core  { --nw: 4;  stroke: var(--core); }
 .vt-back-lit {
-  filter: drop-shadow(0 0 2px var(--glow)) drop-shadow(0 0 8px var(--glow)) drop-shadow(0 0 18px rgba(252,133,57,.45));
+  filter: drop-shadow(0 0 .12cqw var(--glow)) drop-shadow(0 0 .5cqw var(--glow)) drop-shadow(0 0 1.2cqw rgba(252,133,57,.45));
   opacity: .85;
   transition: opacity .25s ease, filter .25s ease;
 }
 .vt-back:hover, .vt-back:focus-visible { transform: translateX(-3px); }
 .vt-back:hover .vt-back-lit, .vt-back:focus-visible .vt-back-lit {
   opacity: 1;
-  filter: drop-shadow(0 0 3px var(--glow)) drop-shadow(0 0 12px var(--glow)) drop-shadow(0 0 28px rgba(252,133,57,.6));
+  filter: drop-shadow(0 0 .2cqw var(--glow)) drop-shadow(0 0 .8cqw var(--glow)) drop-shadow(0 0 1.8cqw rgba(252,133,57,.6));
 }
 .vt-back:focus-visible { outline: 2px solid var(--hot); outline-offset: 4px; }
 .vt-stage.is-zoomed .vt-back { opacity: 0; pointer-events: none; }
 .vt-stage.is-booting .vt-back-lit { opacity: 0; transition: none; }
 .vt-stage.is-lighting .vt-back-lit { animation: vt-neon-on 1.2s step-end .55s both; }
 
-/* ---------- demo notice: a notification that slides in at the top-right ---------- */
+/* demo notice: a notification that slides in, right of the logo, above the right lamp */
 .vt-toast {
   position: absolute; z-index: 4;
-  top: max(18px, 3cqh); right: max(20px, 2.2vw);
-  width: min(380px, calc(100vw - 40px));
-  padding: 14px 44px 14px 16px;
-  font-size: .82rem; line-height: 1.5; color: rgba(245,245,245,.82);
-  background: rgba(16,16,16,.94);
+  left: calc(50% + 7.4cqw); top: 2.4%;
+  width: 29cqw;
+  padding: .75cqw 2.6cqw .75cqw 1cqw;
+  font-size: clamp(.66rem, .86cqw, .84rem); line-height: 1.45; color: rgba(245,245,245,.82);
+  background: rgba(14,14,14,.9);
   border: 1px solid var(--line-strong);
   border-left: 3px solid var(--accent);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0,0,0,.55);
   opacity: 0;
-  transform: translateX(calc(100% + 48px));
-  transition: transform .6s var(--vt-settle), opacity .4s ease;
+  transform: translateX(3cqw);
+  transition: transform .7s var(--vt-settle), opacity .45s ease;
 }
 .vt-toast.is-in { opacity: 1; transform: none; }
 .vt-toast-text strong { color: var(--text); font-weight: 800; }
-.vt-toast-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.vt-toast-text a, .vt-aviso-m a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .vt-toast-x {
-  position: absolute; top: 8px; right: 8px;
-  width: 30px; height: 30px; display: grid; place-items: center;
+  position: absolute; top: .4cqw; right: .4cqw;
+  width: 28px; height: 28px; display: grid; place-items: center;
   border: 0; border-radius: 50%; background: transparent; color: var(--muted);
   transition: var(--transition);
 }
 .vt-toast-x:hover, .vt-toast-x:focus-visible { color: var(--text); background: rgba(255,255,255,.08); }
 .vt-chip {   /* what the notice collapses to: reopens it */
   position: absolute; z-index: 4;
-  top: max(18px, 3cqh); right: max(20px, 2.2vw);
+  left: calc(50% + 7.4cqw); top: 7.6%;
   padding: 6px 12px;
-  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: clamp(.64rem, .72cqw, .76rem); letter-spacing: .06em; text-transform: uppercase;
   color: var(--muted);
   background: rgba(16,16,16,.85);
   border: 1px solid var(--line-strong);
@@ -117,13 +132,14 @@
 }
 .vt-chip.is-in { opacity: 1; transform: none; }
 .vt-chip:hover, .vt-chip:focus-visible { color: var(--accent); border-color: var(--accent); }
-.vt-frame:has(.vt-stage.is-zoomed) .vt-toast,
-.vt-frame:has(.vt-stage.is-zoomed) .vt-chip { opacity: 0; pointer-events: none; }
+.vt-stage.is-zoomed .vt-toast,
+.vt-stage.is-zoomed .vt-chip { opacity: 0; pointer-events: none; }
+.vt-aviso-m { display: none; }   /* phones: the notice goes under the wall instead */
 
 /* ---------- neon sign: the Flick symbol as tubes, top of the wall ---------- */
 .vt-neon {
   position: absolute; left: 50%; top: .9%;
-  width: 7.1cqw; transform: translateX(-50%);   /* % of the 21:9 wall */
+  width: 9.2cqw; transform: translateX(-50%);
   pointer-events: none;
   --tube: #46E3DF; --core: #EAFFFE; --glow: rgba(44,180,178,.95);
 }
@@ -383,17 +399,20 @@
   .vt-tag { display: none; }
   .vt-spot[data-state="empty"] .vt-tag { display: flex; font-size: .42rem; letter-spacing: .08em; padding: 0; }
   .vt-close { display: none; }
-  .vt-back { left: 10px; top: 10px; width: 112px; padding: 4px; }
-  .vt-toast {   /* under the wall, always shown */
-    position: static; width: auto; margin: 14px var(--gutter) 0;
-    opacity: 1; transform: none; box-shadow: none; padding-right: 16px;
+  .vt-back { width: 22cqw; right: calc(50% + 6.6cqw); top: 5%; }
+  .vt-toast, .vt-chip { display: none !important; }
+  .vt-aviso-m {   /* under the wall, always shown */
+    display: block; margin: 14px var(--gutter) 0; padding: 14px 16px;
+    font-size: .82rem; line-height: 1.5; color: rgba(245,245,245,.82);
+    background: rgba(16,16,16,.94);
+    border: 1px solid var(--line-strong); border-left: 3px solid var(--accent); border-radius: 12px;
   }
-  .vt-toast-x, .vt-chip { display: none; }
+  .vt-aviso-m strong { color: var(--text); font-weight: 800; }
   .vt-list-wrap { display: block; margin-top: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vt-world, .vt-close-img, .vt-panel, .vt-tag, .vt-lamp, .vt-lamp::before, .vt-lamp::after, .vt-pool { transition: none !important; }
+  .vt-world, .vt-toast, .vt-close-img, .vt-panel, .vt-tag, .vt-lamp, .vt-lamp::before, .vt-lamp::after, .vt-pool { transition: none !important; }
   .vt-close { transition: opacity .2s linear, visibility 0s linear .2s; }
   .vt-stage.is-open .vt-close { transition: opacity .2s linear, visibility 0s; }
   .vt-close-img { transform: none; }

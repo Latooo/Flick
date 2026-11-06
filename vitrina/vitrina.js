@@ -98,12 +98,21 @@ const realPhotosUrl = (p) => `${ROOT}#producto=${encodeURIComponent(p.id)}`;
 function renderWall() {
   const V = DATA.vitrina;
   const wall = $('#vtWall');
-  wall.sizes = '(min-aspect-ratio: 16/9) 117vw, 131vw';   // the 21:9 wall is wider than the screen
+  // the full image is bigger than the screen: the scene fits, the extra pegboard overflows
+  wall.sizes = '(min-aspect-ratio: 1786/1000) 234vh, 131vw';
   wall.srcset = srcset(V.muro.src, V.muro.anchos);
   wall.src = `${ROOT}${V.muro.src}-${V.muro.anchos[1] || V.muro.anchos[0]}.webp`;
   wall.width = V.muro.ancho; wall.height = V.muro.alto;
 
-  const hRatio = V.muro.alto / V.muro.ancho;   // stage height in units of its width (cqw = 1% of width)
+  // where the original scene sits inside the image -> CSS sizes the world from this
+  const [sx, sy, sw, sh] = V.muro.escena || [0, 0, 100, 100];
+  const world = $('#vtWorld');
+  world.style.setProperty('--ratio', (V.muro.ancho / V.muro.alto).toFixed(5));
+  world.style.setProperty('--sx', sx); world.style.setProperty('--sy', sy);
+  world.style.setProperty('--sw', sw); world.style.setProperty('--sh', sh);
+
+  // scene height in units of its width (cqw = 1% of the scene's width)
+  const hRatio = (V.muro.alto * sh) / (V.muro.ancho * sw);
   SPOTS = V.espacios.map((e) => {
     const p = e.producto ? byId(e.producto) : null;
     const state = !p ? 'empty' : p.agotado ? 'off' : 'on';
@@ -167,18 +176,21 @@ function preload(i) {
 }
 
 /* ---------- zoom in / out ---------- */
-// The wall (world) is centered in the stage and can be wider than it; boxes are % of the wall.
+// The world (full image) is centered in the stage and bigger than it; the scene sits inside
+// the world and boxes are % of the scene. The world scales from its own top-left corner.
 function zoomTransform(i) {
   const stage = $('#vtStage');
   const world = $('#vtWorld');
+  const scene = $('#vtScene');
   const W = stage.clientWidth, H = stage.clientHeight;
-  const ww = world.offsetWidth, wh = world.offsetHeight;
-  const ox = world.offsetLeft, oy = world.offsetTop;
+  const sw = scene.offsetWidth, sh = scene.offsetHeight;
   const [x, y, w, h] = SPOTS[i].e.caja;
-  const bx = (x / 100) * ww, by = (y / 100) * wh, bw = (w / 100) * ww, bh = (h / 100) * wh;
+  // box in world coordinates (before scaling)
+  const bx = scene.offsetLeft + (x / 100) * sw, by = scene.offsetTop + (y / 100) * sh;
+  const bw = (w / 100) * sw, bh = (h / 100) * sh;
   const s = Math.min((W * ZOOM.fill) / bw, (H * ZOOM.fill) / bh);
-  const tx = W / 2 - ox - (bx + bw / 2) * s;
-  const ty = H / 2 - oy - (by + bh / 2) * s;
+  const tx = W / 2 - world.offsetLeft - (bx + bw / 2) * s;
+  const ty = H / 2 - world.offsetTop - (by + bh / 2) * s;
   return `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s.toFixed(4)})`;
 }
 
@@ -336,7 +348,9 @@ function renderAviso() {
   // "Vitrina demo · resto" -> bold lead; the catalog mention becomes a link
   const [lead, ...rest] = aviso.split(' · ');
   const body = esc(rest.join(' · ') || '').replace(/catálogo/, `<a href="${ROOT}#catalogo">catálogo</a>`);
-  $('#vtAviso').innerHTML = rest.length ? `<strong>${esc(lead)}</strong> · ${body}` : esc(aviso);
+  const html = rest.length ? `<strong>${esc(lead)}</strong> · ${body}` : esc(aviso);
+  $('#vtAviso').innerHTML = html;    // notification on the wall (tablet / desktop)
+  $('#vtAvisoM').innerHTML = html;   // static notice under the wall (phones)
 }
 
 async function init() {
@@ -348,7 +362,7 @@ async function init() {
     renderAviso();
     renderWall();
     renderList();
-    lightsOn().then(() => setTimeout(showToast, isPhone() || reducedMotion() ? 0 : 2600));
+    lightsOn().then(() => setTimeout(showToast, reducedMotion() ? 0 : 2600));
   } catch (err) {
     console.error(err);
     $('#vtStage').classList.remove('is-booting');
