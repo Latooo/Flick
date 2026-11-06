@@ -277,7 +277,7 @@ function unitEl(u) {
   let detail;
   if (st === 'vendida') {
     detail = h('span', { class: 'udetail tnum' },
-      `Vendida ${fmtFecha(u.fecha_venta)} a ${money(u.precio_final)}${u.canal ? ' · ' + u.canal : ''}${u.combo ? ' · combo' : ''} · `,
+      `Vendida ${fmtFecha(u.fecha_venta)} a ${money(u.precio_final)}${u.canal ? ' · ' + u.canal : ''}${u.combo ? ' · combo' : ''}${u.domicilio_neto ? ` · domicilio ${u.domicilio_neto > 0 ? '+' : '−'}${money(Math.abs(u.domicilio_neto))}` : ''} · `,
       h('b', { class: (u.utilidad ?? 0) >= 0 ? 'pos' : 'neg', text: `utilidad ${money(u.utilidad)} (${pct(u.margen)})` }),
       u.dias_inventario !== null ? h('span', { class: 'rot ' + rotClass(u.dias_inventario), text: ` · ${dias(u.dias_inventario)}` }) : null);
   } else if (st === 'publicada') {
@@ -388,82 +388,165 @@ $('#pubForm').addEventListener('submit', async (e) => {
 });
 
 /* ---------- Vender ---------- */
+// La unidad principal lleva el domicilio; las del combo llevan su propio precio final.
 let sellUnit = null;
+let comboItems = [];   // [{ u, precio }]
 $('#sellCanal').replaceChildren(...CANALES.map((c) => h('button', { type: 'button', class: 'pill', 'data-canal': c, text: c })));
 $('#sellCanal').addEventListener('click', (e) => {
   const b = e.target.closest('.pill'); if (!b) return;
   const on = b.getAttribute('aria-pressed') !== 'true';
   $('#sellCanal').querySelectorAll('.pill').forEach((x) => x.setAttribute('aria-pressed', String(x === b && on)));
 });
-$('#sellDomPills').addEventListener('click', (e) => {
-  const b = e.target.closest('.pill'); if (!b) return;
-  $('#sellDom').value = b.dataset.dom;
-  syncDomPills(); sellCalc();
-});
-function syncDomPills() {
-  const v = $('#sellDom').value.replace(/[$\s.]/g, '');
-  $('#sellDomPills').querySelectorAll('.pill').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.dom === v)));
+
+// pills que llenan un input numérico (domicilio cobrado / costo del domicilio)
+function bindPills(pillsId, inputId) {
+  const sync = () => {
+    const v = $('#' + inputId).value.replace(/[$\s.]/g, '');
+    $('#' + pillsId).querySelectorAll('.pill').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.v === v)));
+  };
+  $('#' + pillsId).addEventListener('click', (e) => {
+    const b = e.target.closest('.pill'); if (!b) return;
+    $('#' + inputId).value = b.dataset.v;
+    sync(); sellCalc();
+  });
+  $('#' + inputId).addEventListener('input', () => { sync(); sellCalc(); });
+  return sync;
 }
-$('#sellDom').addEventListener('input', () => { syncDomPills(); sellCalc(); });
+const syncCob = bindPills('cobPills', 'sellCob');
+const syncDom = bindPills('domPills', 'sellDom');
 $('#sellPrecio').addEventListener('input', sellCalc);
+
+/* combo */
+$('#sellCombo').addEventListener('change', () => {
+  $('#comboBox').hidden = !$('#sellCombo').checked;
+  if ($('#sellCombo').checked) renderCombo();
+  sellCalc();
+});
+function comboCandidates() {
+  // una opción por grupo (modelo + color) con unidades en stock que no estén ya en la venta
+  const used = new Set([sellUnit.id, ...comboItems.map((c) => c.u.id)]);
+  const groups = new Map();
+  for (const u of INV.units) {
+    if (!u.en_stock || used.has(u.id)) continue;
+    const k = groupKey(u);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(u);
+  }
+  return [...groups.values()].sort((a, b) => a[0].modelo.localeCompare(b[0].modelo, 'es', { numeric: true }));
+}
+function renderCombo() {
+  const cands = comboCandidates();
+  $('#comboPick').replaceChildren(
+    h('option', { value: '', text: cands.length ? 'Elegí qué más se vendió…' : 'No hay más unidades en stock' }),
+    ...cands.map((g) => {
+      const u = pickToSell(g);
+      return h('option', { value: String(u.id), text: `${u.modelo}${u.color ? ' · ' + u.color : ''} (${g.length} en stock)${u.precio_publicado ? ' · ' + money(u.precio_publicado) : ''}` });
+    }));
+  $('#comboAddBtn').disabled = !cands.length;
+  $('#comboItems').replaceChildren(...comboItems.map((c, i) => h('li', { class: 'combo-item' },
+    h('span', { class: 'combo-name' }, h('b', { text: c.u.modelo }), h('span', { class: 'muted small', text: `${c.u.color ? c.u.color + ' · ' : ''}#${c.u.id} · costo ${money(c.u.costo)}` })),
+    h('input', { value: c.precio ?? '', inputmode: 'numeric', class: 'tnum', placeholder: 'Precio', 'aria-label': `Precio final de ${c.u.modelo}`,
+      oninput: (e) => { c.precio = e.target.value; sellCalc(); } }),
+    iconBtn('x', `Quitar ${c.u.modelo} del combo`, () => { comboItems.splice(i, 1); renderCombo(); sellCalc(); }, { danger: true }))));
+}
+$('#comboAddBtn').addEventListener('click', () => {
+  const id = +$('#comboPick').value;
+  const u = INV.units.find((x) => x.id === id);
+  if (!u) return;
+  comboItems.push({ u, precio: u.precio_publicado ?? '' });
+  renderCombo(); sellCalc();
+  const last = $('#comboItems').lastElementChild;
+  if (last) last.querySelector('input').focus();
+});
 
 function sellCalc() {
   const u = sellUnit; if (!u) return;
-  let p, d;
-  try { p = intOrNull($('#sellPrecio').value, 'precio'); d = intOrNull($('#sellDom').value, 'domicilio'); }
-  catch { $('#sellCalc').textContent = ''; return; }
-  if (p === null) { $('#sellCalc').textContent = ''; return; }
-  const ut = p - u.costo - (d || 0);
-  $('#sellCalc').replaceChildren(...[`Costo ${money(u.costo)} → utilidad `, h('b', { class: ut >= 0 ? 'pos' : 'neg', text: `${money(ut)} (${p ? pct(ut / p) : '—'})` }),
-    d === null ? h('span', { class: 'muted', text: ' · sin contar domicilio' }) : null].filter(Boolean));
+  let p, cob, dom; const items = [];
+  try {
+    p = intOrNull($('#sellPrecio').value, 'precio');
+    cob = intOrNull($('#sellCob').value, 'domicilio cobrado');
+    dom = intOrNull($('#sellDom').value, 'domicilio');
+    if ($('#sellCombo').checked) for (const c of comboItems) items.push({ u: c.u, p: intOrNull(c.precio, 'precio') });
+  } catch { $('#sellCalc').replaceChildren(); return; }
+  if (p === null) { $('#sellCalc').replaceChildren(); $('#comboTotal').textContent = ''; return; }
+  const lines = [{ u, p }, ...items];
+  const prod = lines.reduce((s, l) => s + (l.p ?? 0) - l.u.costo, 0);
+  const neto = (cob || 0) - (dom || 0);
+  const totalCobrado = lines.reduce((s, l) => s + (l.p ?? 0), 0);
+  $('#comboTotal').textContent = items.length ? `Total del combo: ${money(totalCobrado)} (${lines.length} productos)` : '';
+  const row = (label, val, cls) => h('div', { class: 'calc-row' }, h('span', { text: label }), h('b', { class: cls || '', text: val }));
+  const costos = lines.reduce((s, l) => s + l.u.costo, 0);
+  const out = [row(items.length ? `Productos (${lines.length}): ${money(totalCobrado)} − costo ${money(costos)}` : `Producto: ${money(p)} − costo ${money(u.costo)}`, money(prod), prod >= 0 ? 'pos' : 'neg')];
+  if (cob !== null || dom !== null) out.push(row(`Domicilio: cobrado ${moneyOr(cob, '$0')} − costo ${moneyOr(dom, '?')}`, `${neto >= 0 ? '+' : ''}${money(neto)}`, neto >= 0 ? 'pos' : 'neg'));
+  const tot = prod + neto;
+  out.push(row('Utilidad de la venta', `${money(tot)}${totalCobrado ? ' (' + pct(tot / totalCobrado) + ')' : ''}`, 'total ' + (tot >= 0 ? 'pos' : 'neg')));
+  if (items.some((l) => l.p === null)) out.push(h('p', { class: 'muted small', text: 'Falta el precio de algún producto del combo.' }));
+  if (dom === null) out.push(h('p', { class: 'muted small', text: 'Sin el costo del domicilio: no se resta nada.' }));
+  $('#sellCalc').replaceChildren(...out);
 }
 
 function openSell(u) {
   sellUnit = u;
+  comboItems = [];
   $('#sellWhat').textContent = `${u.modelo}${u.color ? ' · ' + u.color : ''} · unidad #${u.id}${u.precio_publicado ? ` · publicada a ${money(u.precio_publicado)}` : ''}`;
   $('#sellFecha').value = hoy();
   $('#sellPrecio').value = u.precio_publicado || '';
+  $('#sellCob').value = '0';
   $('#sellDom').value = '0';
   $('#sellCombo').checked = false;
+  $('#comboBox').hidden = true;
   $('#sellNota').value = '';
   $('#sellCanal').querySelectorAll('.pill').forEach((x) => x.setAttribute('aria-pressed', 'false'));
-  syncDomPills(); sellCalc();
+  syncCob(); syncDom(); sellCalc();
   errBox('sellError', '');
   $('#sellDialog').showModal();
   $('#sellPrecio').focus();
 }
 
+const appendNote = (prev, add) => (prev ? `${prev}\n${add}` : add);
+
 $('#sellForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   errBox('sellError', '');
   const u = sellUnit;
-  let fields;
+  let base, mainFields, extra = [];
   try {
     if (!$('#sellFecha').value) throw new Error('Falta la fecha de venta');
     const canalBtn = $('#sellCanal [aria-pressed="true"]');
     if (!canalBtn) throw new Error('Elegí el canal de la venta');
+    const combo = $('#sellCombo').checked && comboItems.length > 0;
+    if ($('#sellCombo').checked && !comboItems.length) throw new Error('Agregá qué más se vendió en el combo, o desactivá "Fue en combo"');
+    base = { fecha_venta: $('#sellFecha').value, canal: canalBtn.dataset.canal, combo };
+    const precio = intOrNull($('#sellPrecio').value, 'El precio final', { required: true });
+    extra = combo ? comboItems.map((c) => ({ u: c.u, precio: intOrNull(c.precio, `El precio de ${c.u.modelo}`, { required: true }) })) : [];
     const nota = $('#sellNota').value.trim();
-    fields = {
-      fecha_venta: $('#sellFecha').value,
-      precio_final: intOrNull($('#sellPrecio').value, 'El precio final', { required: true }),
-      costo_domicilio: intOrNull($('#sellDom').value, 'El domicilio'),
-      canal: canalBtn.dataset.canal,
-      combo: $('#sellCombo').checked
-    };
-    if (nota) fields.notas = u.notas ? `${u.notas}\n${nota}` : nota;
+    // nota de combo en todas las unidades, para saber después con qué se vendió cada una
+    const all = [{ u, precio }, ...extra];
+    const comboNote = combo ? `Combo (${fmtFecha(base.fecha_venta)}): ${all.map((x) => `${x.u.modelo} #${x.u.id} ${money(x.precio)}`).join(' + ')} = ${money(all.reduce((s, x) => s + x.precio, 0))}` : '';
+    const notaDe = (x) => { let n = x.notas; if (comboNote) n = appendNote(n, comboNote); if (nota) n = appendNote(n, nota); return n; };
+    mainFields = { ...base, precio_final: precio,
+      domicilio_cobrado: intOrNull($('#sellCob').value, 'El domicilio cobrado'),
+      costo_domicilio: intOrNull($('#sellDom').value, 'El costo del domicilio') };
+    if (comboNote || nota) mainFields.notas = notaDe(u);
+    extra = extra.map((x) => ({ u: x.u, fields: { ...base, precio_final: x.precio, ...(comboNote || nota ? { notas: notaDe(x.u) } : {}) } }));
     // sin fecha de publicación (encargo, venta directa) no se inventa una: los días quedan vacíos
     // y esa venta no entra al promedio de rotación, igual que en el Excel
   } catch (err) { errBox('sellError', err.message); return; }
   const btn = $('#sellOk');
   busy(btn, true);
+  const done = [];
   try {
-    await invUpdate('inventario', u.id, fields);
+    await invUpdate('inventario', u.id, mainFields); done.push(u);
+    for (const x of extra) { await invUpdate('inventario', x.u.id, x.fields); done.push(x.u); }
     $('#sellDialog').close();
-    toast(`Venta guardada: ${u.modelo} a ${money(fields.precio_final)}`);
+    toast(done.length > 1 ? `Combo guardado: ${done.length} productos` : `Venta guardada: ${u.modelo} a ${money(mainFields.precio_final)}`);
     await loadInv(true);
-    await maybeAgotado(u);
-  } catch (err) { errBox('sellError', 'No se pudo guardar: ' + err.message); }
-  finally { busy(btn, false); }
+    for (const x of done) await maybeAgotado(x);
+  } catch (err) {
+    // las actualizaciones van una por una: si algo falla, se dice exactamente qué quedó guardado
+    errBox('sellError', `No se pudo guardar todo: ${err.message}.${done.length ? ` Sí quedaron vendidas: ${done.map((x) => '#' + x.id).join(', ')}.` : ''}`);
+    if (done.length) loadInv(true);
+  } finally { busy(btn, false); }
 });
 
 // F4: si era la última unidad en stock de un producto de la web, preguntar si marcarlo agotado
@@ -488,7 +571,7 @@ const UFIELDS = {
   uModelo: 'modelo', uMarca: 'marca', uColor: 'color', uPedido: 'pedido', uCosto: 'costo',
   uFPedido: 'fecha_pedido', uFLlegada: 'fecha_llegada', uEstado: 'estado_llegada',
   uFPub: 'fecha_publicacion', uPPub: 'precio_publicado', uConsultas: 'consultas',
-  uFVenta: 'fecha_venta', uPFinal: 'precio_final', uDom: 'costo_domicilio', uCanal: 'canal', uNotas: 'notas'
+  uFVenta: 'fecha_venta', uPFinal: 'precio_final', uCob: 'domicilio_cobrado', uDom: 'costo_domicilio', uCanal: 'canal', uNotas: 'notas'
 };
 
 function fillProductoSelect(sel) {
@@ -508,7 +591,7 @@ function openUnit(u, { dup = false } = {}) {
   $('#uCombo').checked = !!src.combo;
   if (!u) { $('#uFPedido').value = hoy(); $('#uEstado').value = ''; $('#uConsultas').value = 0; }
   if (dup) {   // la copia arranca sin venta ni consultas
-    for (const id of ['uFVenta', 'uPFinal', 'uDom', 'uCanal']) $('#' + id).value = '';
+    for (const id of ['uFVenta', 'uPFinal', 'uCob', 'uDom', 'uCanal']) $('#' + id).value = '';
     $('#uCombo').checked = false; $('#uConsultas').value = 0;
   }
   fillProductoSelect(src.producto_id);
@@ -569,7 +652,8 @@ function collectUnit() {
   if (!$('#uSaleSet').hidden) {
     row.fecha_venta = dateOrNull($('#uFVenta').value);
     row.precio_final = intOrNull($('#uPFinal').value, 'El precio final');
-    row.costo_domicilio = intOrNull($('#uDom').value, 'El domicilio');
+    row.domicilio_cobrado = intOrNull($('#uCob').value, 'El domicilio cobrado');
+    row.costo_domicilio = intOrNull($('#uDom').value, 'El costo del domicilio');
     row.canal = textOrNull($('#uCanal').value);
     row.combo = $('#uCombo').checked;
     if ((row.fecha_venta === null) !== (row.precio_final === null)) throw new Error('Para la venta van juntos la fecha y el precio final (o los dos vacíos)');
@@ -631,7 +715,7 @@ function renderRes() {
   $('#totals').replaceChildren(
     kpi('Inversión', money(t.inversion), plural2(t.unidades, 'unidad', 'unidades')),
     kpi('Ingresos', money(t.ingresos), plural2(t.vendidas, 'vendida', 'vendidas')),
-    kpi('Utilidad bruta', money(t.utilidad), t.ingresos ? `margen ${pct(t.utilidad / t.ingresos)}` : '—', t.utilidad > 0 ? 'good' : ''),
+    kpi('Utilidad bruta', money(t.utilidad), (t.ingresos ? `margen ${pct(t.utilidad / t.ingresos)}` : '—') + (t.domicilio_neto ? ` · domicilios ${t.domicilio_neto > 0 ? '+' : '−'}${money(Math.abs(t.domicilio_neto))}` : ''), t.utilidad > 0 ? 'good' : ''),
     kpi('ROI', pct(t.roi), 'utilidad / inversión total'),
     kpi('Plata quieta', money(t.capital_inmovilizado), plural2(t.en_stock, 'unidad', 'unidades') + ' sin vender'),
     kpi('Después de gastos', money(t.utilidad_despues_gastos), `gastos ${money(t.gastos)}`, t.utilidad_despues_gastos >= 0 ? '' : 'bad'));
@@ -689,7 +773,7 @@ $('#csvInv').addEventListener('click', () => {
     ['id', 'ID'], ['modelo', 'Modelo'], ['marca', 'Marca'], ['color', 'Color'], ['pedido', 'Pedido'], ['costo', 'Costo pagado'],
     ['fecha_pedido', 'Fecha pedido'], ['fecha_llegada', 'Fecha llegada'], ['estado_llegada', 'Estado llegada'],
     ['fecha_publicacion', 'Fecha publicación'], ['precio_publicado', 'Precio publicado'], ['consultas', 'Consultas'],
-    ['fecha_venta', 'Fecha venta'], ['precio_final', 'Precio final'], ['costo_domicilio', 'Costo domicilio'], ['canal', 'Canal'], ['combo', 'Combo'],
+    ['fecha_venta', 'Fecha venta'], ['precio_final', 'Precio final'], ['domicilio_cobrado', 'Domicilio cobrado'], ['costo_domicilio', 'Costo domicilio'], ['canal', 'Canal'], ['combo', 'Combo'],
     ['utilidad', 'Utilidad'], ['margen', 'Margen'], ['dias_inventario', 'Días inventario'], ['dias_desde_llegada', 'Días desde llegada'],
     ['producto_id', 'Producto web'], ['notas', 'Notas']]));
 });

@@ -24,7 +24,8 @@ create table if not exists public.inventario (
   consultas         integer not null default 0 check (consultas >= 0),
   fecha_venta       date null,
   precio_final      integer null check (precio_final >= 0),
-  costo_domicilio   integer null check (costo_domicilio >= 0),   -- null = no se registró
+  costo_domicilio   integer null check (costo_domicilio >= 0),   -- lo que le COSTÓ a Flick (domiciliario); null = no se registró
+  domicilio_cobrado integer null check (domicilio_cobrado >= 0), -- lo que el cliente PAGÓ aparte por el domicilio
   canal             text null check (canal in ('Marketplace', 'Instagram', 'WhatsApp', 'TikTok', 'Conocido', 'Discord')),
   combo             boolean not null default false,
   notas             text null,
@@ -35,6 +36,9 @@ create table if not exists public.inventario (
   -- vendida = tiene fecha y precio final; uno sin el otro es un error de captura
   constraint inventario_venta_completa check ((fecha_venta is null) = (precio_final is null))
 );
+
+-- columnas agregadas después de la primera versión (la tabla ya existe en Supabase)
+alter table public.inventario add column if not exists domicilio_cobrado integer null check (domicilio_cobrado >= 0);
 
 create index if not exists inventario_modelo_idx on public.inventario (modelo);
 create index if not exists inventario_producto_idx on public.inventario (producto_id);
@@ -77,6 +81,10 @@ create trigger gastos_set_updated
   for each row execute function public.set_updated_meta();
 
 -- ---------- vistas (security_invoker: respetan el RLS de quien consulta) ----------
+-- Se borran y se vuelven a crear: "create or replace view" no deja agregar columnas a i.*
+drop view if exists public.inventario_totales;
+drop view if exists public.inventario_resumen;
+drop view if exists public.inventario_calc;
 
 -- "hoy" en Bogotá: la base corre en UTC y después de las 7 p. m. ya sería mañana
 create or replace function public.hoy_bogota()
@@ -85,16 +93,21 @@ language sql
 stable
 as $$ select (now() at time zone 'America/Bogota')::date $$;
 
--- Hoja Inventario con sus columnas grises
-create or replace view public.inventario_calc
+-- Hoja Inventario con sus columnas grises.
+-- Domicilio: lo que el cliente pagó aparte suma; lo que costó llevarlo resta.
+--   utilidad = precio final − costo − costo domicilio + domicilio cobrado
+--   margen   = utilidad / precio final (igual que el Excel cuando no hay domicilio cobrado)
+create view public.inventario_calc
 with (security_invoker = true) as
 select
   i.*,
   (i.fecha_venta is null) as en_stock,
   case when i.precio_final is null then null
-       else i.precio_final - i.costo - coalesce(i.costo_domicilio, 0) end as utilidad,
+       else coalesce(i.domicilio_cobrado, 0) - coalesce(i.costo_domicilio, 0) end as domicilio_neto,
+  case when i.precio_final is null then null
+       else i.precio_final - i.costo - coalesce(i.costo_domicilio, 0) + coalesce(i.domicilio_cobrado, 0) end as utilidad,
   case when coalesce(i.precio_final, 0) = 0 then null
-       else round((i.precio_final - i.costo - coalesce(i.costo_domicilio, 0))::numeric / i.precio_final, 4) end as margen,
+       else round((i.precio_final - i.costo - coalesce(i.costo_domicilio, 0) + coalesce(i.domicilio_cobrado, 0))::numeric / i.precio_final, 4) end as margen,
   -- el reloj de rotación corre desde la publicación (igual que el Excel)
   case when i.fecha_publicacion is null then null
        else coalesce(i.fecha_venta, public.hoy_bogota()) - i.fecha_publicacion end as dias_inventario,
@@ -104,7 +117,7 @@ select
 from public.inventario i;
 
 -- Hoja "Resumen por modelo". Margen meta del precio objetivo: 40% (regla rápida del negocio).
-create or replace view public.inventario_resumen
+create view public.inventario_resumen
 with (security_invoker = true) as
 with m as (
   select
@@ -135,7 +148,7 @@ select
 from m;
 
 -- Totales del Resumen
-create or replace view public.inventario_totales
+create view public.inventario_totales
 with (security_invoker = true) as
 select
   t.*,
@@ -149,6 +162,7 @@ from (
     coalesce(sum(costo), 0)::bigint                      as inversion,
     coalesce(sum(precio_final), 0)::bigint               as ingresos,
     coalesce(sum(utilidad), 0)::bigint                   as utilidad,
+    coalesce(sum(domicilio_neto), 0)::bigint             as domicilio_neto,
     coalesce(sum(costo) filter (where en_stock), 0)::bigint as capital_inmovilizado,
     (select coalesce(sum(monto), 0) from public.gastos)::bigint as gastos
   from public.inventario_calc

@@ -473,9 +473,20 @@ body.form-open .sections { display: none; }
 }
 .pill:hover { border-color: rgba(255,255,255,.3); color: var(--text); }
 .pill[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: #061413; }
-#sellDom { margin-top: 8px; }
-.calc { margin-top: 4px; padding: 10px 12px; border-radius: var(--r); background: var(--surface-2); font-size: .9rem; }
+.calc { margin-top: 4px; padding: 10px 12px; border-radius: var(--r); background: var(--surface-2); font-size: .9rem; display: flex; flex-direction: column; gap: 4px; }
 .calc:empty { display: none; }
+.calc-row { display: flex; justify-content: space-between; gap: 12px; color: var(--text-2); }
+.calc-row b.total { font-size: 1.05rem; }
+.calc-row:has(b.total) { padding-top: 6px; margin-top: 2px; border-top: 1px solid var(--line-strong); color: var(--text); font-weight: 700; }
+#sellCob, .combo { margin-top: 10px; padding: 12px; border: 1px solid rgba(44,180,178,.35); border-radius: var(--r); background: var(--accent-soft); display: flex; flex-direction: column; gap: 10px; }
+.combo-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.combo-items:empty { display: none; }
+.combo-item { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 8px; align-items: center; }
+.combo-name { min-width: 0; display: flex; flex-direction: column; }
+.combo-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-add { display: flex; gap: 8px; }
+.combo-add select { flex: 1; min-width: 0; }
+.combo-total:empty { display: none; }
 
 /* dialogs for forms */
 .dialog form > * + * { margin-top: 12px; }
@@ -524,6 +535,9 @@ body.form-open .sections { display: none; }
   .gactions { padding: 0 12px 12px 12px; }
   .gactions .btn { flex: 1 1 0; }
   .gactions .btn-consulta { flex: 0 0 auto; }
+  .combo-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .combo-name { grid-column: 1 / -1; }
+  .combo-name b { white-space: normal; }
   .dialog-wide .dialog-actions { position: sticky; bottom: -22px; margin-inline: -22px; margin-bottom: -22px; padding: 12px 22px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); }
   .unit { padding: 8px 6px 8px 12px; align-items: flex-start; }
   .unit-main { flex-direction: column; gap: 6px; }

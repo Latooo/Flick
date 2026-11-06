@@ -311,27 +311,48 @@
     </form>
   </dialog>
 
-  <dialog id="sellDialog" class="dialog">
+  <dialog id="sellDialog" class="dialog dialog-wide">
     <form method="dialog" id="sellForm" novalidate>
       <h2 class="dialog-title">Registrar venta</h2>
       <p id="sellWhat" class="muted small"></p>
       <div class="two">
         <label class="field"><span>Fecha de venta</span><input id="sellFecha" type="date" required></label>
-        <label class="field"><span>Precio final (COP) <em class="muted">lo que pagaron</em></span><input id="sellPrecio" inputmode="numeric" class="tnum" required></label>
+        <label class="field"><span>Precio final (COP) <em class="muted">lo que pagaron por este</em></span><input id="sellPrecio" inputmode="numeric" class="tnum" required></label>
       </div>
-      <div class="field"><span>Domicilio</span>
-        <div class="pills" id="sellDomPills">
-          <button type="button" class="pill" data-dom="0">Gratis</button>
-          <button type="button" class="pill" data-dom="5000">$5.000</button>
-          <button type="button" class="pill" data-dom="10000">$10.000</button>
-          <button type="button" class="pill" data-dom="">No sé</button>
+
+      <label class="switch switch-accent"><input id="sellCombo" type="checkbox"><span class="track"></span><span>Fue en combo <em class="switch-note">con otros productos del inventario</em></span></label>
+      <div id="comboBox" class="combo" hidden>
+        <ul id="comboItems" class="combo-items"></ul>
+        <div class="combo-add">
+          <select id="comboPick" aria-label="Producto del combo"></select>
+          <button id="comboAddBtn" class="btn" type="button"><svg class="ic"><use href="#i-plus"/></svg><span>Agregar</span></button>
         </div>
-        <input id="sellDom" inputmode="numeric" class="tnum" placeholder="Otro valor, ej. 20000" aria-label="Costo del domicilio">
+        <p id="comboTotal" class="small muted tnum"></p>
       </div>
+
+      <fieldset class="fs">
+        <legend>Domicilio</legend>
+        <div class="field"><span>¿El cliente pagó domicilio aparte? <em class="muted">entra a Flick</em></span>
+          <div class="pills" id="cobPills">
+            <button type="button" class="pill" data-v="0">No</button>
+            <button type="button" class="pill" data-v="5000">$5.000</button>
+            <button type="button" class="pill" data-v="10000">$10.000</button>
+          </div>
+          <input id="sellCob" inputmode="numeric" class="tnum" placeholder="Otro valor" aria-label="Domicilio que pagó el cliente">
+        </div>
+        <div class="field"><span>¿Cuánto les costó llevarlo? <em class="muted">sale de Flick</em></span>
+          <div class="pills" id="domPills">
+            <button type="button" class="pill" data-v="0">Nada, lo llevamos</button>
+            <button type="button" class="pill" data-v="">No sé</button>
+          </div>
+          <input id="sellDom" inputmode="numeric" class="tnum" placeholder="Domiciliario, ej. 20000" aria-label="Lo que costó el domicilio">
+          <small class="field-help">Si lo llevaron ustedes en la moto, es 0 (o la gasolina, si la quieren contar).</small>
+        </div>
+      </fieldset>
+
       <div class="field"><span>Canal</span><div class="pills" id="sellCanal"></div></div>
-      <label class="switch switch-accent"><input id="sellCombo" type="checkbox"><span class="track"></span><span>Fue en combo</span></label>
       <label class="field"><span>Nota <em class="muted">opcional, se agrega a las notas</em></span><input id="sellNota" autocomplete="off"></label>
-      <p id="sellCalc" class="calc tnum"></p>
+      <div id="sellCalc" class="calc tnum"></div>
       <p id="sellError" class="error" role="alert" hidden></p>
       <div class="dialog-actions">
         <button class="btn btn-ghost" type="button" data-close>Cancelar</button>
@@ -378,7 +399,10 @@
           <label class="field"><span>Precio final</span><input id="uPFinal" inputmode="numeric" class="tnum"></label>
         </div>
         <div class="two">
+          <label class="field"><span>Domicilio cobrado <em class="muted">lo pagó el cliente</em></span><input id="uCob" inputmode="numeric" class="tnum"></label>
           <label class="field"><span>Costo domicilio <em class="muted">vacío = no se sabe</em></span><input id="uDom" inputmode="numeric" class="tnum"></label>
+        </div>
+        <div class="two">
           <label class="field"><span>Canal</span>
             <select id="uCanal"><option value="">—</option><option>Marketplace</option><option>Instagram</option><option>WhatsApp</option><option>TikTok</option><option>Conocido</option><option>Discord</option></select>
           </label>
