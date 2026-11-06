@@ -48,6 +48,8 @@ Sitio estático: HTML, CSS y JS sin build. Los productos se leen de Supabase (ve
 | `_headers` | Caché del navegador en Netlify para `img/` y `media/` |
 | `media/` | Video de portada |
 | `admin/` | Panel de administrador (`/admin/`) |
+| `vitrina/` | Vitrina de teclados (`/vitrina/`): muro con lámparas y vista de cerca |
+| `img/vitrina/` | Imágenes de la vitrina, hechas con IA a partir de fotos reales (muro y vistas de cerca, WebP) |
 | `supabase/` | SQL de la base de datos |
 | `scripts/` | Utilidades de Python |
 | `.github/workflows/` | Keep-alive de Supabase |
@@ -83,6 +85,15 @@ Sitio estático: HTML, CSS y JS sin build. Los productos se leen de Supabase (ve
 | `verificar_supabase.py` | Compara la tabla con `productos.json` y comprueba que la clave pública no pueda escribir. |
 | `miniaturas.py` | Genera las miniaturas de `img/*.jpg` en `img/thumb/`. Correrlo cada vez que se agregue o cambie una foto en `img/` (necesita Pillow). |
 | `e2e_panel.py` | Prueba de punta a punta del panel con una cuenta admin (credenciales en variables de entorno `FLICK_TEST_EMAIL` y `FLICK_TEST_PASSWORD`). |
+
+### Vitrina de teclados
+
+`/vitrina/` muestra un muro de pegboard con los teclados. Las imágenes son una demo hecha con IA a partir de las fotos reales, y la página lo avisa y enlaza al catálogo.
+
+- El bloque `vitrina` de `productos.json` define los 6 espacios del muro: qué producto va en cada uno (`null` = Próximamente), su posición (`caja` y `lampara`, en % del muro) y la imagen de cerca.
+- La lámpara sale del producto: si está agotado (desde el panel), la lámpara se apaga sola. Al pasar el mouse se prende en azul, o en naranja si está agotado.
+- "Ver fotos reales" abre `/#producto=<id>`, que abre el modal de ese producto en el inicio.
+- Para cambiar un teclado de espacio o agregar uno nuevo hay que generar de nuevo el muro y su vista de cerca; la posición del espacio se mide sobre el muro.
 
 ### Keep-alive
 
