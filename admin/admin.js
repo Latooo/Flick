@@ -119,6 +119,7 @@ async function enter(session) {
   }
   $('#whoami').textContent = session.user.email || '';
   show('app');
+  if (window.onAppEnter) window.onAppEnter();   // secciones de inventario (inventario.js)
   await bootApp();
 }
 
@@ -148,6 +149,7 @@ $('#logoutBtn').addEventListener('click', async () => {
   state.productos = [];
   state.loaded = false;
   if (state.form) closeForm(true);
+  if (window.onAppLogout) window.onAppLogout();
   show('login');
 });
 

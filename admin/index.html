@@ -33,6 +33,12 @@
       <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
       <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3.5 7.5 7 4l3.5 3.5M17 20V4M13.5 16.5 17 20l3.5-3.5"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="m4 7 8 4 8-4M12 11v10"/></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1.4"/></symbol>
+      <symbol id="i-sale" viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7.5"/><path d="M3 21h18"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
     </defs>
   </svg>
 
@@ -40,7 +46,7 @@
     <form id="loginForm" class="login-card" novalidate>
       <div class="brand brand-lg"><img src="../img/marca/flick-simbolo.svg" alt="" width="34" height="34"><span class="display">Flick</span></div>
       <div class="login-copy">
-        <h1>Panel de productos</h1>
+        <h1>Panel de Flick</h1>
         <p class="muted">Acceso solo para administradores.</p>
       </div>
       <label class="field"><span>Correo</span>
@@ -62,6 +68,13 @@
         <button id="logoutBtn" class="btn btn-ghost" type="button"><svg class="ic"><use href="#i-logout"/></svg><span>Salir</span></button>
       </div>
     </header>
+
+    <nav class="sections" id="sections" aria-label="Secciones del panel">
+      <a class="section-link" href="#productos" data-section="productos">Productos</a>
+      <a class="section-link" href="#inventario" data-section="inventario">Inventario</a>
+      <a class="section-link" href="#resumen" data-section="resumen">Resumen</a>
+      <a class="section-link" href="#gastos" data-section="gastos">Gastos</a>
+    </nav>
 
     <section id="listView" class="wrap">
       <div class="page-head">
@@ -173,6 +186,87 @@
         </div>
       </form>
     </section>
+
+    <!-- ===== Inventario: una fila por unidad (tabla inventario / vista inventario_calc) ===== -->
+    <section id="invView" class="wrap" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="display page-title">Inventario</h1>
+          <p id="invSummary" class="muted small tnum">Cargando…</p>
+        </div>
+        <button id="buyBtn" class="btn btn-primary" type="button"><svg class="ic"><use href="#i-plus"/></svg><span>Agregar<span class="hide-sm"> compra</span></span></button>
+      </div>
+
+      <div id="invKpis" class="kpis"></div>
+
+      <div class="controls">
+        <label class="search">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input id="invSearch" type="search" placeholder="Buscar modelo, marca o color" aria-label="Buscar modelo, marca o color" autocomplete="off">
+        </label>
+        <div class="seg" role="tablist" aria-label="Filtrar unidades">
+          <button class="tab inv-tab" role="tab" data-filter="stock" aria-selected="true" type="button">En stock <span class="count tnum" id="cntStock"></span></button>
+          <button class="tab inv-tab" role="tab" data-filter="vendidas" aria-selected="false" type="button">Vendidas <span class="count tnum" id="cntVendidas"></span></button>
+          <button class="tab inv-tab" role="tab" data-filter="todas" aria-selected="false" type="button">Todas <span class="count tnum" id="cntTodas"></span></button>
+        </div>
+      </div>
+      <div id="pedidoChips" class="cats" role="group" aria-label="Filtrar por pedido"></div>
+
+      <div id="groups" class="groups" aria-live="polite"></div>
+      <div id="invEmpty" class="empty" hidden>
+        <p id="invEmptyText">No hay unidades que coincidan.</p>
+        <button id="invClear" class="btn btn-ghost" type="button">Limpiar filtros</button>
+      </div>
+    </section>
+
+    <!-- ===== Resumen por modelo (vistas inventario_resumen e inventario_totales) ===== -->
+    <section id="resView" class="wrap" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="display page-title">Resumen</h1>
+          <p class="muted small">Qué reponer y qué no. Verde: rota en 30 días o menos. Rojo: más de 60.</p>
+        </div>
+        <div class="head-actions">
+          <button id="csvInv" class="btn btn-ghost" type="button"><svg class="ic"><use href="#i-download"/></svg><span>Inventario<span class="hide-sm"> CSV</span></span></button>
+          <button id="csvGas" class="btn btn-ghost" type="button"><svg class="ic"><use href="#i-download"/></svg><span>Gastos<span class="hide-sm"> CSV</span></span></button>
+        </div>
+      </div>
+      <div id="totals" class="kpis kpis-6"></div>
+      <div class="controls">
+        <div class="seg" role="tablist" aria-label="Ordenar resumen">
+          <button class="tab res-sort" role="tab" data-sort="rotacion" aria-selected="true" type="button">Rotación</button>
+          <button class="tab res-sort" role="tab" data-sort="utilidad" aria-selected="false" type="button">Utilidad</button>
+          <button class="tab res-sort" role="tab" data-sort="stock" aria-selected="false" type="button">En stock</button>
+          <button class="tab res-sort" role="tab" data-sort="nombre" aria-selected="false" type="button">Nombre</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="rtable tnum" id="resTable">
+          <thead>
+            <tr>
+              <th scope="col">Modelo</th><th scope="col">Und.</th><th scope="col">Vend.</th><th scope="col">Stock</th>
+              <th scope="col">Inversión</th><th scope="col">Ingresos</th><th scope="col">Utilidad</th><th scope="col">Margen</th>
+              <th scope="col">Días venta</th><th scope="col">Veredicto</th><th scope="col">Precio obj.</th>
+            </tr>
+          </thead>
+          <tbody id="resRows"></tbody>
+        </table>
+      </div>
+      <p class="muted small res-note">Precio objetivo = costo promedio con 40% de margen, redondeado a $500. Es un piso de referencia, no el precio de venta.</p>
+    </section>
+
+    <!-- ===== Gastos (tabla gastos) ===== -->
+    <section id="gasView" class="wrap" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="display page-title">Gastos</h1>
+          <p id="gasSummary" class="muted small tnum">Lo que no es inventario para vender.</p>
+        </div>
+        <button id="gastoNew" class="btn btn-primary" type="button"><svg class="ic"><use href="#i-plus"/></svg><span>Nuevo<span class="hide-sm"> gasto</span></span></button>
+      </div>
+      <ul id="gasRows" class="rows"></ul>
+      <div id="gasEmpty" class="empty" hidden><p>Todavía no hay gastos registrados.</p></div>
+    </section>
   </div>
 
   <dialog id="cropDialog" class="dialog">
@@ -198,11 +292,151 @@
     </div>
   </dialog>
 
+
+  <!-- ===== diálogos de inventario ===== -->
+  <dialog id="pubDialog" class="dialog">
+    <form method="dialog" id="pubForm" novalidate>
+      <h2 class="dialog-title">Publicar</h2>
+      <p id="pubWhat" class="muted small"></p>
+      <div class="two">
+        <label class="field"><span>Fecha de publicación</span><input id="pubFecha" type="date" required></label>
+        <label class="field"><span>Precio publicado (COP)</span><input id="pubPrecio" inputmode="numeric" class="tnum" required><small id="pubHelp" class="field-help tnum"></small></label>
+      </div>
+      <label class="switch switch-accent" id="pubAllWrap"><input id="pubAll" type="checkbox" checked><span class="track"></span><span id="pubAllLabel"></span></label>
+      <p id="pubError" class="error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" type="button" data-close>Cancelar</button>
+        <button id="pubOk" class="btn btn-primary" type="submit">Publicar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="sellDialog" class="dialog">
+    <form method="dialog" id="sellForm" novalidate>
+      <h2 class="dialog-title">Registrar venta</h2>
+      <p id="sellWhat" class="muted small"></p>
+      <div class="two">
+        <label class="field"><span>Fecha de venta</span><input id="sellFecha" type="date" required></label>
+        <label class="field"><span>Precio final (COP) <em class="muted">lo que pagaron</em></span><input id="sellPrecio" inputmode="numeric" class="tnum" required></label>
+      </div>
+      <div class="field"><span>Domicilio</span>
+        <div class="pills" id="sellDomPills">
+          <button type="button" class="pill" data-dom="0">Gratis</button>
+          <button type="button" class="pill" data-dom="5000">$5.000</button>
+          <button type="button" class="pill" data-dom="10000">$10.000</button>
+          <button type="button" class="pill" data-dom="">No sé</button>
+        </div>
+        <input id="sellDom" inputmode="numeric" class="tnum" placeholder="Otro valor, ej. 20000" aria-label="Costo del domicilio">
+      </div>
+      <div class="field"><span>Canal</span><div class="pills" id="sellCanal"></div></div>
+      <label class="switch switch-accent"><input id="sellCombo" type="checkbox"><span class="track"></span><span>Fue en combo</span></label>
+      <label class="field"><span>Nota <em class="muted">opcional, se agrega a las notas</em></span><input id="sellNota" autocomplete="off"></label>
+      <p id="sellCalc" class="calc tnum"></p>
+      <p id="sellError" class="error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" type="button" data-close>Cancelar</button>
+        <button id="sellOk" class="btn btn-primary" type="submit">Guardar venta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="unitDialog" class="dialog dialog-wide">
+    <form method="dialog" id="unitForm" novalidate>
+      <h2 class="dialog-title" id="unitTitle">Unidad</h2>
+      <p id="unitSub" class="muted small"></p>
+      <div class="two">
+        <label class="field"><span>Modelo</span><input id="uModelo" list="dlModelos" required autocomplete="off"></label>
+        <label class="field"><span>Marca</span><input id="uMarca" list="dlMarcas" autocomplete="off"></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Color</span><input id="uColor" autocomplete="off"></label>
+        <label class="field"><span>Pedido</span><input id="uPedido" list="dlPedidos" autocomplete="off" placeholder="Ej. Pedido 3"></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Costo pagado (COP) <em class="muted">real, con cupón</em></span><input id="uCosto" inputmode="numeric" class="tnum" required></label>
+        <label class="field" id="uCantWrap"><span>Cantidad <em class="muted">crea una fila por unidad</em></span><input id="uCant" type="number" min="1" max="20" value="1" class="tnum"><small id="uCantHelp" class="field-help"></small></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Fecha pedido</span><input id="uFPedido" type="date"></label>
+        <label class="field"><span>Fecha llegada <em class="muted">vacío = en camino</em></span><input id="uFLlegada" type="date"></label>
+      </div>
+      <label class="field"><span>Estado al llegar</span>
+        <select id="uEstado"><option value="">—</option><option>OK</option><option>Defectuoso</option><option>Faltante</option><option>Dañado en tránsito</option></select>
+      </label>
+      <fieldset class="fs" id="uPubSet">
+        <legend>Publicación</legend>
+        <div class="two">
+          <label class="field"><span>Fecha publicación</span><input id="uFPub" type="date"></label>
+          <label class="field"><span>Precio publicado</span><input id="uPPub" inputmode="numeric" class="tnum"></label>
+        </div>
+        <label class="field"><span>Consultas</span><input id="uConsultas" type="number" min="0" class="tnum"></label>
+      </fieldset>
+      <fieldset class="fs" id="uSaleSet">
+        <legend>Venta</legend>
+        <div class="two">
+          <label class="field"><span>Fecha venta</span><input id="uFVenta" type="date"></label>
+          <label class="field"><span>Precio final</span><input id="uPFinal" inputmode="numeric" class="tnum"></label>
+        </div>
+        <div class="two">
+          <label class="field"><span>Costo domicilio <em class="muted">vacío = no se sabe</em></span><input id="uDom" inputmode="numeric" class="tnum"></label>
+          <label class="field"><span>Canal</span>
+            <select id="uCanal"><option value="">—</option><option>Marketplace</option><option>Instagram</option><option>WhatsApp</option><option>TikTok</option><option>Conocido</option><option>Discord</option></select>
+          </label>
+        </div>
+        <label class="switch switch-accent"><input id="uCombo" type="checkbox"><span class="track"></span><span>Combo</span></label>
+      </fieldset>
+      <label class="field"><span>Producto de la web <em class="muted">opcional, para avisar cuando se agote</em></span><select id="uProducto"></select></label>
+      <label class="field"><span>Notas</span><textarea id="uNotas" rows="3"></textarea></label>
+      <p id="unitError" class="error" role="alert" hidden></p>
+      <div class="dialog-actions dialog-actions-split">
+        <div class="dialog-actions-left">
+          <button id="unitDelete" class="btn btn-danger-ghost btn-sm" type="button"><svg class="ic"><use href="#i-trash"/></svg><span>Eliminar</span></button>
+          <button id="unitDup" class="btn btn-ghost btn-sm" type="button"><svg class="ic"><use href="#i-copy"/></svg><span>Duplicar</span></button>
+        </div>
+        <button class="btn btn-ghost" type="button" data-close>Cancelar</button>
+        <button id="unitOk" class="btn btn-primary" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="gastoDialog" class="dialog">
+    <form method="dialog" id="gastoForm" novalidate>
+      <h2 class="dialog-title" id="gastoTitle">Nuevo gasto</h2>
+      <div class="two">
+        <label class="field"><span>Fecha</span><input id="gFecha" type="date" required></label>
+        <label class="field"><span>Monto (COP)</span><input id="gMonto" inputmode="numeric" class="tnum" required></label>
+      </div>
+      <label class="field"><span>Concepto</span><input id="gConcepto" required autocomplete="off" placeholder="Ej. Caja de luz para fotos"></label>
+      <label class="field"><span>Pedido <em class="muted">opcional</em></span><input id="gPedido" autocomplete="off"></label>
+      <label class="field"><span>Notas <em class="muted">opcional</em></span><textarea id="gNotas" rows="2"></textarea></label>
+      <p id="gastoError" class="error" role="alert" hidden></p>
+      <div class="dialog-actions dialog-actions-split">
+        <div class="dialog-actions-left"><button id="gastoDelete" class="btn btn-danger-ghost btn-sm" type="button"><svg class="ic"><use href="#i-trash"/></svg><span>Eliminar</span></button></div>
+        <button class="btn btn-ghost" type="button" data-close>Cancelar</button>
+        <button id="gastoOk" class="btn btn-primary" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog" class="dialog">
+    <h2 class="dialog-title" id="confirmTitle"></h2>
+    <p id="confirmText"></p>
+    <div class="dialog-actions">
+      <button id="confirmNo" class="btn btn-ghost" type="button">Cancelar</button>
+      <button id="confirmYes" class="btn btn-primary" type="button"></button>
+    </div>
+  </dialog>
+
+  <datalist id="dlModelos"></datalist>
+  <datalist id="dlMarcas"></datalist>
+  <datalist id="dlPedidos"></datalist>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"
           integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK"
           crossorigin="anonymous"></script>
   <script src="admin.js"></script>
+  <script src="inventario.js"></script>
 </body>
 </html>
