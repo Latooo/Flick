@@ -98,9 +98,10 @@ const realPhotosUrl = (p) => `${ROOT}#producto=${encodeURIComponent(p.id)}`;
 function renderWall() {
   const V = DATA.vitrina;
   const wall = $('#vtWall');
-  wall.sizes = '(max-width: 1600px) 100vw, 1600px';
+  wall.sizes = '(min-aspect-ratio: 16/9) 117vw, 131vw';   // the 21:9 wall is wider than the screen
   wall.srcset = srcset(V.muro.src, V.muro.anchos);
   wall.src = `${ROOT}${V.muro.src}-${V.muro.anchos[1] || V.muro.anchos[0]}.webp`;
+  wall.width = V.muro.ancho; wall.height = V.muro.alto;
 
   const hRatio = V.muro.alto / V.muro.ancho;   // stage height in units of its width (cqw = 1% of width)
   SPOTS = V.espacios.map((e) => {
@@ -160,21 +161,24 @@ function preload(i) {
   // decode ahead of the click so the zoom never waits on a 2000 px image
   const img = new Image();
   img.decoding = 'async';
-  img.sizes = '(max-width: 1600px) 100vw, 1600px';
+  img.sizes = '100vw';
   img.srcset = srcset(s.e.cerca, DATA.vitrina.cerca.anchos);
   img.decode().catch(() => {});
 }
 
 /* ---------- zoom in / out ---------- */
+// The wall (world) is centered in the stage and can be wider than it; boxes are % of the wall.
 function zoomTransform(i) {
   const stage = $('#vtStage');
-  const W = stage.clientWidth;
-  const H = stage.clientHeight;
+  const world = $('#vtWorld');
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const ww = world.offsetWidth, wh = world.offsetHeight;
+  const ox = world.offsetLeft, oy = world.offsetTop;
   const [x, y, w, h] = SPOTS[i].e.caja;
-  const bx = (x / 100) * W, by = (y / 100) * H, bw = (w / 100) * W, bh = (h / 100) * H;
+  const bx = (x / 100) * ww, by = (y / 100) * wh, bw = (w / 100) * ww, bh = (h / 100) * wh;
   const s = Math.min((W * ZOOM.fill) / bw, (H * ZOOM.fill) / bh);
-  const tx = W / 2 - (bx + bw / 2) * s;
-  const ty = H / 2 - (by + bh / 2) * s;
+  const tx = W / 2 - ox - (bx + bw / 2) * s;
+  const ty = H / 2 - oy - (by + bh / 2) * s;
   return `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s.toFixed(4)})`;
 }
 
@@ -205,7 +209,7 @@ function open(i, from) {
   opener = from || document.activeElement;
   const stage = $('#vtStage');
   const img = $('#vtCloseImg');
-  img.sizes = '(max-width: 1600px) 100vw, 1600px';
+  img.sizes = '100vw';
   img.srcset = srcset(s.e.cerca, DATA.vitrina.cerca.anchos);
   img.src = `${ROOT}${s.e.cerca}-${DATA.vitrina.cerca.anchos[0]}.webp`;
   img.alt = `${s.p.nombre} de cerca (imagen demo hecha con IA)`;
@@ -213,11 +217,9 @@ function open(i, from) {
   const decoded = img.decode().catch(() => {});
   $('#vtPanel').innerHTML = panelHTML(s.p);
 
-  // bring the whole stage on screen first (the frame is sized to fit under the header)
-  const top = stage.getBoundingClientRect().top;
-  const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 65;
-  if (top < headerH || stage.getBoundingClientRect().bottom > innerHeight) {
-    scrollTo({ top: scrollY + top - headerH - 16, behavior: reducedMotion() ? 'auto' : 'smooth' });
+  // the stage is the whole screen: make sure it is fully in view
+  if (Math.abs(stage.getBoundingClientRect().top) > 1) {
+    scrollTo({ top: scrollY + stage.getBoundingClientRect().top, behavior: reducedMotion() ? 'auto' : 'smooth' });
   }
   stage.classList.add('is-zoomed');
   $('#vtWorld').style.transform = reducedMotion() ? '' : zoomTransform(i);
@@ -302,6 +304,32 @@ async function lightsOn() {
   setTimeout(() => stage.classList.remove('is-lighting'), ZOOM.lampsAfterMs + 1500 + k * ZOOM.bootStepMs + 300);
 }
 
+/* ---------- demo notice: slides in after the lights, collapses to a chip ---------- */
+const TOAST_MS = 450;
+function showToast() {
+  const t = $('#vtToast'), chip = $('#vtChip');
+  chip.classList.remove('is-in');
+  chip.setAttribute('aria-expanded', 'true');
+  setTimeout(() => { if (!chip.classList.contains('is-in')) chip.hidden = true; }, TOAST_MS);
+  t.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('is-in')));
+}
+function hideToast() {
+  const t = $('#vtToast'), chip = $('#vtChip');
+  t.classList.remove('is-in');
+  chip.setAttribute('aria-expanded', 'false');
+  setTimeout(() => {
+    t.hidden = true;
+    chip.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => chip.classList.add('is-in')));
+    chip.focus({ preventScroll: true });
+  }, reducedMotion() ? 0 : TOAST_MS);
+}
+function setupToast() {
+  $('#vtToastX').addEventListener('click', hideToast);
+  $('#vtChip').addEventListener('click', showToast);
+}
+
 /* ---------- boot ---------- */
 function renderAviso() {
   const aviso = DATA.vitrina.aviso || '';
@@ -313,13 +341,14 @@ function renderAviso() {
 
 async function init() {
   setupCloseUp();
+  setupToast();
   try {
     DATA = await loadData();
     if (!DATA.vitrina || !Array.isArray(DATA.vitrina.espacios)) throw new Error('productos.json no trae "vitrina"');
     renderAviso();
     renderWall();
     renderList();
-    lightsOn();
+    lightsOn().then(() => setTimeout(showToast, isPhone() || reducedMotion() ? 0 : 2600));
   } catch (err) {
     console.error(err);
     $('#vtStage').classList.remove('is-booting');

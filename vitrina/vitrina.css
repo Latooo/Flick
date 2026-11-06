@@ -15,47 +15,29 @@
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-.vt-nav { margin-left: auto; display: flex; gap: 28px; }
-.vt-nav a {
-  font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--accent); padding: 4px 0; border-bottom: 2px solid transparent; transition: var(--transition);
-}
-.vt-nav a:hover, .vt-nav a[aria-current="page"] { border-bottom-color: var(--accent); }
-
-/* ---------- demo notice (over the wall, bottom-left) ---------- */
-.vt-aviso {
-  position: absolute; z-index: 3; left: 1.4cqw; bottom: 1.2cqw;
-  max-width: min(560px, 46cqw);
-  font-size: .74rem; line-height: 1.45; color: rgba(245,245,245,.78);
-  padding: 8px 12px;
-  background: rgba(10,10,10,.72);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  transition: opacity .35s ease;
-}
-.vt-aviso strong { color: var(--text); font-weight: 800; }
-.vt-aviso a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-.vt-stage.is-zoomed .vt-aviso { opacity: 0; pointer-events: none; }
-
-/* ---------- stage ---------- */
-.vt-frame {   /* the wall is the page: as wide as fits under the header, centered */
-  width: min(100%, calc((100svh - var(--header-h)) * 4096 / 2294));
-  margin-inline: auto;
-}
+/* ---------- stage: the whole screen is the wall ----------
+   The wall image is 21:9 (the original 16:9 scene plus pegboard extended on both sides).
+   --h keeps the original scene (76.5% of the width, ratio 1.7855) always fully visible;
+   on wider screens the extended sides fill in, so there are no black bars. */
+.vt-frame { position: relative; }
 .vt-stage {
   position: relative;
-  aspect-ratio: 4096 / 2294;
+  height: 100vh; height: 100svh;
   overflow: hidden;
-  background: #070707;
-  container-type: inline-size;
+  background: #050505;
+  container-type: size;
   isolation: isolate;
 }
-/* closing: the wall comes back while it pulls out */
 .vt-world {
-  position: absolute; inset: 0;
+  --ratio: 2.3341;   /* 5352 / 2293, full image */
+  --h: min(100cqh, calc(100cqw / 1.7855));
+  position: absolute;
+  width: calc(var(--h) * var(--ratio)); height: var(--h);
+  left: calc(50% - var(--h) * var(--ratio) / 2); top: calc(50% - var(--h) / 2);
+  container-type: size;   /* cqw inside the wall = % of the wall, so lamps and neon scale with it */
   transform-origin: 0 0;
   will-change: transform, opacity;
-  transition: transform 1s var(--vt-ease) .08s, opacity .5s ease .12s;
+  transition: transform 1s var(--vt-ease) .08s, opacity .5s ease .12s;   /* closing */
 }
 /* opening: slow camera push; the wall fades only in the last part, while the close-up arrives */
 .vt-stage.is-zoomed .vt-world {
@@ -65,10 +47,83 @@
 .vt-wall { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .vt-spots { position: absolute; inset: 0; }
 
+/* ---------- back to the catalog: orange neon, top-left of the screen ---------- */
+.vt-back {
+  position: absolute; z-index: 3;
+  left: max(20px, 2.2cqw); top: max(18px, 3cqh);
+  width: clamp(130px, 11cqw, 230px);
+  padding: 6px;
+  border-radius: 8px;
+  --tube: #FFA36B; --core: #FFF2E8; --glow: rgba(252,133,57,.95);
+  transition: transform .25s ease, opacity .35s ease;
+}
+.vt-back-svg { display: block; width: 100%; height: auto; overflow: visible; }
+#vtBackShape path { stroke-width: var(--nw, 10); }
+.vt-back .vt-neon-glass { --nw: 12; stroke: rgba(170,150,140,.16); }
+.vt-back .vt-neon-tube  { --nw: 11; stroke: var(--tube); }
+.vt-back .vt-neon-core  { --nw: 4;  stroke: var(--core); }
+.vt-back-lit {
+  filter: drop-shadow(0 0 2px var(--glow)) drop-shadow(0 0 8px var(--glow)) drop-shadow(0 0 18px rgba(252,133,57,.45));
+  opacity: .85;
+  transition: opacity .25s ease, filter .25s ease;
+}
+.vt-back:hover, .vt-back:focus-visible { transform: translateX(-3px); }
+.vt-back:hover .vt-back-lit, .vt-back:focus-visible .vt-back-lit {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px var(--glow)) drop-shadow(0 0 12px var(--glow)) drop-shadow(0 0 28px rgba(252,133,57,.6));
+}
+.vt-back:focus-visible { outline: 2px solid var(--hot); outline-offset: 4px; }
+.vt-stage.is-zoomed .vt-back { opacity: 0; pointer-events: none; }
+.vt-stage.is-booting .vt-back-lit { opacity: 0; transition: none; }
+.vt-stage.is-lighting .vt-back-lit { animation: vt-neon-on 1.2s step-end .55s both; }
+
+/* ---------- demo notice: a notification that slides in at the top-right ---------- */
+.vt-toast {
+  position: absolute; z-index: 4;
+  top: max(18px, 3cqh); right: max(20px, 2.2vw);
+  width: min(380px, calc(100vw - 40px));
+  padding: 14px 44px 14px 16px;
+  font-size: .82rem; line-height: 1.5; color: rgba(245,245,245,.82);
+  background: rgba(16,16,16,.94);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.55);
+  opacity: 0;
+  transform: translateX(calc(100% + 48px));
+  transition: transform .6s var(--vt-settle), opacity .4s ease;
+}
+.vt-toast.is-in { opacity: 1; transform: none; }
+.vt-toast-text strong { color: var(--text); font-weight: 800; }
+.vt-toast-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.vt-toast-x {
+  position: absolute; top: 8px; right: 8px;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: transparent; color: var(--muted);
+  transition: var(--transition);
+}
+.vt-toast-x:hover, .vt-toast-x:focus-visible { color: var(--text); background: rgba(255,255,255,.08); }
+.vt-chip {   /* what the notice collapses to: reopens it */
+  position: absolute; z-index: 4;
+  top: max(18px, 3cqh); right: max(20px, 2.2vw);
+  padding: 6px 12px;
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(16,16,16,.85);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  opacity: 0; transform: translateX(16px);
+  transition: opacity .3s ease, transform .4s var(--vt-settle), color .2s ease, border-color .2s ease;
+}
+.vt-chip.is-in { opacity: 1; transform: none; }
+.vt-chip:hover, .vt-chip:focus-visible { color: var(--accent); border-color: var(--accent); }
+.vt-frame:has(.vt-stage.is-zoomed) .vt-toast,
+.vt-frame:has(.vt-stage.is-zoomed) .vt-chip { opacity: 0; pointer-events: none; }
+
 /* ---------- neon sign: the Flick symbol as tubes, top of the wall ---------- */
 .vt-neon {
   position: absolute; left: 50%; top: .9%;
-  width: 9.2cqw; transform: translateX(-50%);
+  width: 7.1cqw; transform: translateX(-50%);   /* % of the 21:9 wall */
   pointer-events: none;
   --tube: #46E3DF; --core: #EAFFFE; --glow: rgba(44,180,178,.95);
 }
@@ -290,7 +345,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  scroll-margin-top: calc(var(--header-h) + 12px);
+  scroll-margin-top: 12px;
 }
 .vt-card + .vt-card { margin-top: 16px; }
 .vt-card-media { position: relative; aspect-ratio: 2000 / 1116; background: #070707; }
@@ -323,18 +378,18 @@
 
 /* ---------- phones: wall as a cover, details as cards ---------- */
 @media (max-width: 699px) {
-  .vt-frame { width: 100%; }
-  .vt-aviso {   /* too small over the wall on a phone: goes under it */
-    position: static; max-width: none; margin: 14px var(--gutter) 0;
-    font-size: .8rem; background: var(--surface);
-  }
-  .vt-stage { overflow: visible; aspect-ratio: auto; }
-  .vt-stage > .vt-world { position: relative; aspect-ratio: 4096 / 2294; }
+  /* phone: the wall is a cover image (original scene only), details go in the cards below */
+  .vt-stage { height: auto; aspect-ratio: 4096 / 2294; }
   .vt-tag { display: none; }
   .vt-spot[data-state="empty"] .vt-tag { display: flex; font-size: .42rem; letter-spacing: .08em; padding: 0; }
   .vt-close { display: none; }
+  .vt-back { left: 10px; top: 10px; width: 112px; padding: 4px; }
+  .vt-toast {   /* under the wall, always shown */
+    position: static; width: auto; margin: 14px var(--gutter) 0;
+    opacity: 1; transform: none; box-shadow: none; padding-right: 16px;
+  }
+  .vt-toast-x, .vt-chip { display: none; }
   .vt-list-wrap { display: block; margin-top: 20px; }
-  .vt-nav { gap: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
